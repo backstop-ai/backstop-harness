@@ -1,0 +1,192 @@
+---
+plan_id: PLAN-SPEC-001
+spec_id: SPEC-001
+created: "2026-07-22"
+status: completed
+coverage_threshold: 90
+test_command: "backstop gate all"
+
+phases:
+  - id: PHASE-001
+    name: Seed 1 domain contract tests
+    tasks:
+      - id: TASK-001
+        type: test
+        title: Add Backstop domain schema contract tests
+        description: Create tests that assert typed work-unit identities, lifecycle states, role-scoped commands, actors, events, rejection reasons, attribution, discovered_from causal links, and append-only correction shapes required by SPEC-001.
+        files:
+          - packages/opencode/test/backstop/domain/schema.test.ts
+        claims:
+          - Covers REQ-001 by requiring distinct typed identifiers for lifecycle entities.
+          - Covers REQ-002 by requiring explicit lifecycle states, commands, actors, events, and rejection metadata.
+          - Covers REQ-009 by requiring every lifecycle fact and correction to be attributed to exactly one work unit.
+          - Guards REQ-010 by testing domain schema exports without coordinator, UI, verifier, or child-session behavior.
+        depends_on: []
+      - id: TASK-002
+        type: test
+        title: Add artifact revision identity tests
+        description: Create tests for line-ending-normalized SHA-256 artifact revision hashing, candidate revision identity, and stale artifact comparison behavior used by transition preconditions.
+        files:
+          - packages/opencode/test/backstop/domain/artifact-revision.test.ts
+        claims:
+          - Covers REQ-005 by requiring normalized complete-byte SHA-256 revision identity.
+          - Requires stale revision comparisons to be typed and deterministic.
+          - Sharp edge: artifact revision race tests must prove content-dependent commands reject stale expected revisions instead of accepting writes against changed artifacts.
+          - Keeps artifact revision behavior independent of persistence, worker dispatch, and UI state.
+        depends_on: []
+      - id: TASK-003
+        type: test
+        title: Add deterministic transition table tests
+        description: Create table-driven tests for accepted and rejected lifecycle commands across the product path, reactive path, aggregate-version conflicts, unauthorized actors, illegal commands, terminal work units, stale attempts, interruption, restart recovery, retry exhaustion, supersession, abandonment, cancellation, stale completion, and late completion.
+        files:
+          - packages/opencode/test/backstop/domain/transition.test.ts
+        claims:
+          - Covers REQ-003 by requiring pure deterministic transition evaluation that returns ordered appendable events or typed rejections.
+          - Covers REQ-004 by requiring expected aggregate-version conflict fencing.
+          - Covers REQ-007 by requiring explicit non-happy lifecycle outcomes and terminal, resumable, repair-scoped, or retryable semantics.
+          - Covers REQ-008 by requiring stale attempt and late completion fencing.
+          - Sharp edge: concurrent commands with stale aggregate versions must be rejected before any event list is produced.
+          - Sharp edge: stale or late attempt completions must be suppressed deterministically and must not reopen or mutate terminal work units.
+          - Guards REQ-010 by asserting the transition core emits domain events only and never launches runtime work.
+        depends_on: []
+      - id: TASK-004
+        type: test
+        title: Add EventV2 projection tests
+        description: Create tests that fold EventV2 lifecycle events into current work-unit state, active attempt, blockers, expected revisions, terminal outcome, and legal next actions, including an append-and-project atomic boundary contract for future adapters.
+        files:
+          - packages/opencode/test/backstop/domain/projection.test.ts
+        claims:
+          - Covers REQ-006 by requiring deterministic current-state projection from EventV2 lifecycle events.
+          - Requires projection output to expose legal next actions for later coordinator and UI consumers without implementing those consumers.
+          - Requires append-and-project semantics to be represented as one atomic boundary.
+          - Sharp edge: tests must make partial append without projection update, or projection update without committed append, an invalid adapter contract.
+        depends_on: []
+  - id: PHASE-002
+    name: Seed 1 domain implementation
+    tasks:
+      - id: TASK-006
+        type: implementation
+        title: Implement Backstop domain schemas
+        description: Add the Backstop domain schema module with branded or otherwise type-safe IDs, lifecycle states, commands, actors, payloads, events, rejections, aggregate state, attribution records, discovered_from causal links, and append-only attribution correction events.
+        files:
+          - packages/opencode/src/backstop/domain/schema.ts
+        claims:
+          - Implements REQ-001 typed identities for work units, commands, events, attempts, sessions, artifacts, revisions, evidence, reviews, causal links, and corrections.
+          - Implements REQ-002 explicit lifecycle vocabulary for product and reactive paths with legal-action metadata.
+          - Implements REQ-009 single-work-unit attribution, discovered_from source IDs, and append-only correction modeling.
+          - Maintains REQ-010 Seed 1 scope by exporting domain data only.
+        depends_on:
+          - TASK-001
+      - id: TASK-007
+        type: implementation
+        title: Implement artifact revision identity helpers
+        description: Add normalized artifact byte hashing and revision comparison helpers that produce SHA-256 artifact revision IDs after line-ending normalization and return typed stale or candidate revision outcomes for transition preconditions.
+        files:
+          - packages/opencode/src/backstop/domain/artifact-revision.ts
+        claims:
+          - Implements REQ-005 normalized complete-byte SHA-256 artifact revision identity.
+          - Provides deterministic stale and candidate revision checks for content-dependent commands.
+          - Sharp edge: protects artifact revision comparisons from line-ending drift and concurrent file edits between planning and completion.
+          - Keeps hashing helpers side-effect-free and independent from persistence or coordinator work.
+        depends_on:
+          - TASK-002
+      - id: TASK-008
+        type: implementation
+        title: Implement deterministic transition core
+        description: Add the pure transition evaluator and transition table that evaluate aggregate state, expected aggregate version, command, actor, and pinned artifact revisions into typed rejections or ordered EventV2 lifecycle events without side effects.
+        files:
+          - packages/opencode/src/backstop/domain/transition.ts
+        claims:
+          - Implements REQ-003 deterministic side-effect-free legal transition evaluation for product and reactive paths.
+          - Implements REQ-004 aggregate-version conflict fencing before events are accepted for append.
+          - Implements REQ-007 explicit validation failure, changes requested, repair, retry exhaustion, interruption, restart recovery, supersession, abandonment, cancellation, stale completion, and late completion outcomes.
+          - Implements REQ-008 stale attempt, interrupted attempt, and completion race fencing.
+          - Sharp edge: aggregate version fencing must be the first acceptance gate for concurrent commands so losing writers emit typed rejections only.
+          - Sharp edge: artifact revision races must reject completions or transitions whose pinned revisions no longer match the projected expectation.
+          - Sharp edge: stale and late completions must be suppressed without changing active attempts, terminal outcomes, or legal next actions.
+          - Maintains REQ-010 by returning events and rejections only, without worker dispatch, verification execution, UI, or child sessions.
+        depends_on:
+          - TASK-003
+          - TASK-006
+          - TASK-007
+      - id: TASK-009
+        type: implementation
+        title: Implement EventV2 current-state projection
+        description: Add deterministic projection helpers that fold committed EventV2 lifecycle events into current lifecycle state, active attempt, blockers, expected revisions, terminal outcome, legal next actions, and an append-and-project atomic boundary contract for future persistence adapters.
+        files:
+          - packages/opencode/src/backstop/domain/projection.ts
+        claims:
+          - Implements REQ-006 deterministic EventV2 projection and legal next-action derivation.
+          - Represents event append and current-state projection as one atomic boundary for later adapters.
+          - Sharp edge: append and projection state must be modeled as an indivisible commit boundary to prevent readers observing committed events without matching current state.
+          - Maintains REQ-010 by exposing projection contracts without implementing persistence, coordinator, UI, or verifier behavior.
+        depends_on:
+          - TASK-004
+          - TASK-006
+          - TASK-008
+      - id: TASK-010
+        type: documentation
+        title: Document Seed 1 domain module boundaries
+        description: Add concise domain README documentation describing the schema, artifact revision, transition, and projection modules; their SPEC-001 requirement mapping; and explicit exclusions for coordinator, UI, Bun verifier pack, adapter, and child-session behavior.
+        files:
+          - packages/opencode/src/backstop/domain/README.md
+        claims:
+          - Documents REQ-010 scope boundaries for future slices.
+          - Records how domain modules map to SPEC-001 contracts CON-001 through CON-004.
+          - Documents sharp edges for aggregate-version concurrency, atomic append/project semantics, artifact revision races, and stale or late completion suppression.
+          - Helps reviewers confirm Seed 1 exports domain primitives only.
+        depends_on:
+          - TASK-006
+          - TASK-007
+          - TASK-008
+          - TASK-009
+      - id: TASK-011
+        type: verification
+        title: Verify Seed 1 implementation through code gate
+        description: Run backstop gate code --scope=working to validate the domain implementation, contract tests, type surface, and package checks through the standard backstop gate after implementation.
+        files:
+          - packages/opencode/src/backstop/domain/schema.ts
+          - packages/opencode/src/backstop/domain/artifact-revision.ts
+          - packages/opencode/src/backstop/domain/transition.ts
+          - packages/opencode/src/backstop/domain/projection.ts
+          - packages/opencode/src/backstop/domain/README.md
+          - packages/opencode/test/backstop/domain/schema.test.ts
+          - packages/opencode/test/backstop/domain/artifact-revision.test.ts
+          - packages/opencode/test/backstop/domain/transition.test.ts
+          - packages/opencode/test/backstop/domain/projection.test.ts
+        claims:
+          - Confirms all SPEC-001 implementation tasks satisfy their contract tests using backstop gate code --scope=working.
+          - Confirms no coordinator, UI, Bun-pack extraction, adapter, or child-session behavior was added in this slice.
+        depends_on:
+          - TASK-006
+          - TASK-007
+          - TASK-008
+          - TASK-009
+          - TASK-010
+  - id: PHASE-003
+    name: Final SPEC-001 verification
+    tasks:
+      - id: TASK-012
+        type: verification
+        title: Run final all-gates verification for SPEC-001
+        description: Run backstop gate all to perform final runtime-owned validation across the completed Seed 1 domain schemas, artifact revision helpers, transition core, projection core, tests, and scope boundaries.
+        files:
+          - packages/opencode/src/backstop/domain/schema.ts
+          - packages/opencode/src/backstop/domain/artifact-revision.ts
+          - packages/opencode/src/backstop/domain/transition.ts
+          - packages/opencode/src/backstop/domain/projection.ts
+          - packages/opencode/src/backstop/domain/README.md
+          - packages/opencode/test/backstop/domain/schema.test.ts
+          - packages/opencode/test/backstop/domain/artifact-revision.test.ts
+          - packages/opencode/test/backstop/domain/transition.test.ts
+          - packages/opencode/test/backstop/domain/projection.test.ts
+        claims:
+          - Provides final verification coverage for REQ-001 through REQ-010.
+          - Confirms the completed work passes the standard full backstop gate before handoff.
+          - Confirms final phase verification covers all implementation, test, and documentation work from the plan.
+        depends_on:
+          - TASK-006
+          - TASK-007
+          - TASK-008
+          - TASK-009
+          - TASK-011

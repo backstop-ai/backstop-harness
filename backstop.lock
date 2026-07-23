@@ -1,0 +1,9 @@
+packs:
+    backstop/harness-toolchain:
+        content_hash: 89f565f0f53bea152fd88a67733643f017bcd4539681ee90830d4fb223b47cd2
+        git_ref: null
+        install_date: 2026-07-23T01:15:00Z
+        local_path: ../backstop-harness-toolchain-pack
+        name: backstop/harness-toolchain
+        source_type: local
+        version: null

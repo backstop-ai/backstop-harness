@@ -1,4 +1,6 @@
 export { Agent } from "./agent"
+export { BackstopEvent } from "./backstop-event"
+export { BackstopControl } from "./backstop-control"
 export { Command } from "./command"
 export { Connection } from "./connection"
 export { Credential } from "./credential"

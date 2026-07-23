@@ -1,0 +1,171 @@
+---
+plan_id: PLAN-SPEC-002
+spec_id: SPEC-002
+created: "2026-07-22"
+status: completed
+spec_version: 1.0.0
+coverage_threshold: 80
+test_command: "backstop gate all"
+
+phases:
+  - id: PHASE-001
+    name: Native contracts and failing domain tests
+    tasks:
+      - id: TASK-001
+        type: test
+        title: Add durable Backstop artifact-event contract tests
+        description: Require versioned durable import, candidate-accepted, and candidate-rejected definitions aggregated by work unit and registered in the durable manifest.
+        files:
+          - packages/schema/test/backstop-event.test.ts
+        claims: [CLM-008, CLM-009, CLM-010]
+        test_names:
+          - "registers versioned Backstop artifact events as durable work-unit aggregates"
+        depends_on: []
+      - id: TASK-002
+        type: test
+        title: Add immutable revision repository integration tests
+        description: Use native EventV2 and in-memory SQLite to cover normalized snapshot recovery, idempotent import, candidate isolation, acceptance/rejection, rollback, version conflicts, restart reads, and project/work-unit isolation.
+        files:
+          - packages/core/test/backstop/artifact-repository.test.ts
+        claims: [CLM-001, CLM-002, CLM-008, CLM-009]
+        test_names:
+          - "persists and recovers complete normalized artifact snapshots"
+          - "keeps changed artifact revisions candidate and evidence-free"
+          - "commits artifact import event and graph projection atomically"
+          - "rejects concurrent imports at the same aggregate version"
+          - "isolates artifact imports by project and work unit"
+        depends_on: []
+      - id: TASK-003
+        type: test
+        title: Add traceability graph and query tests
+        description: Cover bounded artifact projection, revision-qualified nodes, deterministic reference resolution, completeness gaps, stale evidence, malformed input, ambiguity, and Seed 2 execution boundaries.
+        files:
+          - packages/core/test/backstop/traceability.test.ts
+        claims: [CLM-003, CLM-004, CLM-005, CLM-006, CLM-007, CLM-010]
+        test_names:
+          - "fails closed on malformed and unsupported artifact projections"
+          - "isolates repeated requirement and claim IDs by artifact revision"
+          - "resolves cross-artifact references deterministically"
+          - "reports deterministic requirements-to-evidence completeness gaps"
+          - "reports stale evidence without changing structural completeness"
+          - "keeps artifact traceability independent from runtime execution"
+        depends_on: []
+  - id: PHASE-002
+    name: Durable schema and pure traceability implementation
+    tasks:
+      - id: TASK-004
+        type: implementation
+        title: Define and register Backstop durable artifact events
+        description: Add browser-safe event schemas with complete deterministic projector inputs and register their union in the native durable manifest.
+        files:
+          - packages/schema/src/backstop-event.ts
+          - packages/schema/src/durable-event-manifest.ts
+          - packages/schema/src/index.ts
+        claims: [CLM-008, CLM-009, CLM-010]
+        depends_on: [TASK-001]
+      - id: TASK-005
+        type: implementation
+        title: Implement bounded artifact projection and traceability queries
+        description: Add strict Seed 2 artifact projections, revision-qualified graph nodes and typed edges, deterministic reference resolution, completeness reports, and evidence freshness queries without filesystem, database, verifier, coordinator, or UI effects.
+        files:
+          - packages/core/src/backstop/artifact/model.ts
+          - packages/core/src/backstop/artifact/traceability.ts
+        claims: [CLM-003, CLM-004, CLM-005, CLM-006, CLM-007, CLM-010]
+        depends_on: [TASK-003, TASK-004]
+      - id: TASK-012
+        type: verification
+        title: Verify durable contracts and pure traceability
+        description: Run schema event tests, pure traceability tests, package typechecks, and the scoped Backstop gate before persistence work begins.
+        files:
+          - packages/schema/src/backstop-event.ts
+          - packages/schema/test/backstop-event.test.ts
+          - packages/core/src/backstop/artifact/model.ts
+          - packages/core/src/backstop/artifact/traceability.ts
+          - packages/core/test/backstop/traceability.test.ts
+        claims: [CLM-003, CLM-004, CLM-005, CLM-006, CLM-007, CLM-008, CLM-009, CLM-010]
+        depends_on: [TASK-004, TASK-005]
+  - id: PHASE-003
+    name: Atomic persistence and import
+    tasks:
+      - id: TASK-006
+        type: implementation
+        title: Add artifact revision and traceability tables
+        description: Define immutable snapshot, file pointer, graph node, graph edge, and import diagnostic tables with explicit project/work-unit ownership, revision-qualified uniqueness, foreign keys, and indexes.
+        files:
+          - packages/core/src/backstop/artifact/sql.ts
+        claims: [CLM-001, CLM-002, CLM-004, CLM-009]
+        depends_on: [TASK-002, TASK-005, TASK-012]
+      - id: TASK-007
+        type: implementation
+        title: Generate and verify the artifact traceability migration
+        description: Generate native core database schema and migration artifacts, then extend migration tests for fresh and upgraded databases.
+        files:
+          - packages/core/schema.json
+          - packages/core/src/database/schema.gen.ts
+          - packages/core/src/database/migration.gen.ts
+          - packages/core/src/database/migrations
+          - packages/core/test/database-migration.test.ts
+        claims: [CLM-001, CLM-009]
+        depends_on: [TASK-002, TASK-006]
+      - id: TASK-008
+        type: implementation
+        title: Implement atomic EventV2 artifact repository
+        description: Register deterministic projectors and expose import, candidate reconciliation, snapshot reads, graph reads, completeness, and stale-evidence methods. Fence expected aggregate versions inside the native immediate transaction and keep external effects outside projectors.
+        files:
+          - packages/core/src/backstop/artifact/repository.ts
+        claims: [CLM-001, CLM-002, CLM-004, CLM-005, CLM-006, CLM-007, CLM-008, CLM-009, CLM-010]
+        depends_on: [TASK-002, TASK-004, TASK-005, TASK-007]
+      - id: TASK-009
+        type: implementation
+        title: Implement location-scoped authored artifact importer
+        description: Read an explicit repository-relative artifact path through native location/filesystem services, normalize and hash complete bytes, project bounded traceability facts, and submit a typed import to the global repository without owning discovery or canonical validation.
+        files:
+          - packages/opencode/src/backstop/artifact/importer.ts
+          - packages/opencode/test/backstop/artifact/importer.test.ts
+        claims: [CLM-001, CLM-003, CLM-009, CLM-010]
+        test_names:
+          - "imports an explicit authored artifact path with location and work-unit isolation"
+        depends_on: [TASK-003, TASK-008]
+      - id: TASK-013
+        type: verification
+        title: Verify atomic persistence and importer integration
+        description: Run repository, migration, importer, rollback, concurrency, and isolation tests plus package typechecks and a scoped Backstop gate.
+        files:
+          - packages/core/src/backstop/artifact/sql.ts
+          - packages/core/src/backstop/artifact/repository.ts
+          - packages/core/test/backstop/artifact-repository.test.ts
+          - packages/core/test/database-migration.test.ts
+          - packages/opencode/src/backstop/artifact/importer.ts
+          - packages/opencode/test/backstop/artifact/importer.test.ts
+        claims: [CLM-001, CLM-002, CLM-008, CLM-009, CLM-010]
+        depends_on: [TASK-006, TASK-007, TASK-008, TASK-009]
+  - id: PHASE-004
+    name: Seed 2 verification
+    tasks:
+      - id: TASK-010
+        type: verification
+        title: Run package-local Seed 2 tests and typechecks
+        description: Run schema, core, and opencode Backstop tests and package-local typechecks through the harness-specific toolchain contract.
+        files:
+          - packages/schema/src/backstop-event.ts
+          - packages/schema/test/backstop-event.test.ts
+          - packages/core/src/backstop/artifact/model.ts
+          - packages/core/src/backstop/artifact/traceability.ts
+          - packages/core/src/backstop/artifact/sql.ts
+          - packages/core/src/backstop/artifact/repository.ts
+          - packages/core/test/backstop/artifact-repository.test.ts
+          - packages/core/test/backstop/traceability.test.ts
+          - packages/opencode/src/backstop/artifact/importer.ts
+          - packages/opencode/test/backstop/artifact/importer.test.ts
+        claims: [CLM-001, CLM-002, CLM-003, CLM-004, CLM-005, CLM-006, CLM-007, CLM-008, CLM-009, CLM-010]
+        depends_on: [TASK-008, TASK-009, TASK-013]
+      - id: TASK-011
+        type: verification
+        title: Run final all-gates verification
+        description: Run backstop gate all with blocking harness lint, build, tests, and coverage after all Seed 2 implementation and migration work is complete.
+        files:
+          - packages/schema/src/backstop-event.ts
+          - packages/core/src/backstop/artifact
+          - packages/opencode/src/backstop/artifact
+        claims: [CLM-001, CLM-002, CLM-003, CLM-004, CLM-005, CLM-006, CLM-007, CLM-008, CLM-009, CLM-010]
+        depends_on: [TASK-009, TASK-010]

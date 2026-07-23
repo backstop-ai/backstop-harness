@@ -1,0 +1,3271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="An interactive explainer for a fluid, traceable, runtime-supervised Backstop harness built on OpenCode V2."
+    />
+    <title>Backstop Harness - Fluid outside. Deterministic at the boundaries.</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f4f0e5;
+        --paper-deep: #e9e2d2;
+        --ink: #14150f;
+        --muted: #6e6d62;
+        --line: rgba(20, 21, 15, 0.2);
+        --line-strong: rgba(20, 21, 15, 0.82);
+        --acid: #d8ff63;
+        --acid-deep: #a7d820;
+        --blue: #3458ff;
+        --blue-soft: #dce3ff;
+        --coral: #ff6f5e;
+        --coral-soft: #ffe0d8;
+        --dark: #171912;
+        --dark-panel: #22251b;
+        --white: #fffdf7;
+        --shadow: 0 18px 60px rgba(35, 31, 20, 0.12);
+        --radius: 18px;
+        --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --serif: Iowan Old Style, Baskerville, "Times New Roman", serif;
+        --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        background: var(--paper);
+      }
+
+      body {
+        margin: 0;
+        overflow-x: hidden;
+        background:
+          radial-gradient(circle at 85% 3%, rgba(216, 255, 99, 0.6), transparent 23rem),
+          linear-gradient(rgba(20, 21, 15, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(20, 21, 15, 0.045) 1px, transparent 1px), var(--paper);
+        background-size:
+          auto,
+          42px 42px,
+          42px 42px,
+          auto;
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.5;
+      }
+
+      button,
+      a {
+        font: inherit;
+      }
+
+      button {
+        color: inherit;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      :focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 4px;
+      }
+
+      .scroll-progress {
+        position: fixed;
+        z-index: 100;
+        inset: 0 auto auto 0;
+        width: 0;
+        height: 4px;
+        background: var(--blue);
+      }
+
+      .site-nav {
+        position: sticky;
+        z-index: 50;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 66px;
+        padding: 0 4vw;
+        border-bottom: 1px solid var(--line);
+        background: rgba(244, 240, 229, 0.88);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        text-decoration: none;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        border: 2px solid var(--ink);
+        place-items: center;
+        background: var(--acid);
+        transform: rotate(-4deg);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 22px;
+        align-items: center;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .nav-links a:hover {
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 5px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 7px 11px;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: var(--white);
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+      }
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--acid-deep);
+        box-shadow: 0 0 0 5px rgba(167, 216, 32, 0.18);
+      }
+
+      main {
+        width: min(1480px, 100%);
+        margin: 0 auto;
+      }
+
+      .hero {
+        min-height: calc(100vh - 66px);
+        padding: clamp(54px, 8vw, 112px) 4vw 54px;
+      }
+
+      .eyebrow {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin: 0 0 22px;
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        width: 42px;
+        height: 2px;
+        background: currentColor;
+        content: "";
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 1240px;
+        margin-bottom: 34px;
+        font-size: clamp(4.2rem, 11vw, 10.8rem);
+        font-weight: 730;
+        letter-spacing: -0.09em;
+        line-height: 0.79;
+      }
+
+      .hero-emphasis {
+        display: inline-block;
+        color: var(--blue);
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 400;
+        letter-spacing: -0.08em;
+        transform: rotate(-1.5deg);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+        gap: clamp(34px, 7vw, 110px);
+        align-items: end;
+      }
+
+      .hero-copy {
+        max-width: 770px;
+        margin: 0;
+        font-size: clamp(1.2rem, 2vw, 2rem);
+        line-height: 1.28;
+      }
+
+      .hero-copy strong {
+        background: linear-gradient(transparent 62%, var(--acid) 62%);
+      }
+
+      .hero-note {
+        padding: 22px;
+        border: 1px solid var(--line-strong);
+        background: var(--white);
+        box-shadow: 8px 8px 0 var(--ink);
+        transform: rotate(1.2deg);
+      }
+
+      .hero-note p {
+        margin-bottom: 0;
+      }
+
+      .hero-note .note-label {
+        margin-bottom: 18px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hero-note .note-quote {
+        font-family: var(--serif);
+        font-size: clamp(1.55rem, 2.5vw, 2.35rem);
+        line-height: 1.02;
+      }
+
+      .hero-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: clamp(64px, 10vw, 132px);
+        padding-top: 20px;
+        border-top: 1px solid var(--line-strong);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .section {
+        padding: clamp(78px, 10vw, 150px) 4vw;
+        border-top: 1px solid var(--line-strong);
+      }
+
+      .section-dark {
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        padding-right: max(4vw, calc((100vw - 1480px) / 2 + 4vw));
+        padding-left: max(4vw, calc((100vw - 1480px) / 2 + 4vw));
+        border-top: 0;
+        background:
+          radial-gradient(circle at 15% 15%, rgba(216, 255, 99, 0.12), transparent 28rem),
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px), var(--dark);
+        background-size:
+          auto,
+          42px 42px,
+          42px 42px,
+          auto;
+        color: var(--white);
+      }
+
+      .section-heading {
+        display: grid;
+        grid-template-columns: minmax(0, 0.76fr) minmax(300px, 0.44fr);
+        gap: clamp(36px, 8vw, 120px);
+        align-items: end;
+        margin-bottom: clamp(46px, 7vw, 96px);
+      }
+
+      .section-number {
+        display: block;
+        margin-bottom: 18px;
+        color: var(--blue);
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+      }
+
+      .section-dark .section-number {
+        color: var(--acid);
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-size: clamp(2.8rem, 6.5vw, 7.1rem);
+        letter-spacing: -0.075em;
+        line-height: 0.88;
+      }
+
+      .section-intro {
+        max-width: 550px;
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: clamp(1rem, 1.5vw, 1.32rem);
+      }
+
+      .section-dark .section-intro {
+        color: rgba(255, 253, 247, 0.64);
+      }
+
+      .contrast-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid var(--line-strong);
+        background: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .contrast-card {
+        min-height: 360px;
+        padding: clamp(26px, 4vw, 54px);
+      }
+
+      .contrast-card + .contrast-card {
+        border-left: 1px solid var(--line-strong);
+      }
+
+      .contrast-card:first-child {
+        color: #5c5b54;
+        background: repeating-linear-gradient(-45deg, #ece8df, #ece8df 12px, #e5e0d7 12px, #e5e0d7 24px);
+      }
+
+      .contrast-card:last-child {
+        position: relative;
+        overflow: hidden;
+        background: var(--acid);
+      }
+
+      .contrast-card:last-child::after {
+        position: absolute;
+        right: -60px;
+        bottom: -90px;
+        width: 240px;
+        height: 240px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        content: "";
+      }
+
+      .card-kicker {
+        display: inline-block;
+        margin-bottom: 44px;
+        padding: 5px 9px;
+        border: 1px solid currentColor;
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .contrast-card h3 {
+        max-width: 520px;
+        margin-bottom: 24px;
+        font-size: clamp(2rem, 4vw, 4rem);
+        letter-spacing: -0.06em;
+        line-height: 0.98;
+      }
+
+      .contrast-card p {
+        position: relative;
+        z-index: 1;
+        max-width: 540px;
+        margin-bottom: 0;
+        font-size: 1.05rem;
+      }
+
+      .principle-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        margin-top: 28px;
+        border-top: 1px solid var(--line-strong);
+        border-bottom: 1px solid var(--line-strong);
+      }
+
+      .principle {
+        padding: 25px;
+        font-family: var(--mono);
+        font-size: clamp(0.82rem, 1vw, 1rem);
+        font-weight: 800;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .principle + .principle {
+        border-left: 1px solid var(--line-strong);
+      }
+
+      .path-tabs {
+        display: flex;
+        width: fit-content;
+        margin-bottom: 36px;
+        padding: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .path-tab {
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 253, 247, 0.6);
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .path-tab[aria-selected="true"] {
+        background: var(--acid);
+        color: var(--ink);
+      }
+
+      .path-explorer {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
+        gap: 28px;
+      }
+
+      .path-track {
+        display: grid;
+        gap: 10px;
+      }
+
+      .path-step {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr) auto;
+        gap: 22px;
+        align-items: center;
+        width: 100%;
+        min-height: 91px;
+        padding: 16px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.045);
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+        transition:
+          transform 160ms ease,
+          background 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .path-step:hover {
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateX(5px);
+      }
+
+      .path-step.active {
+        border-color: var(--acid);
+        background: var(--acid);
+        color: var(--ink);
+      }
+
+      .step-index {
+        font-family: var(--serif);
+        font-size: 2.8rem;
+        font-style: italic;
+        line-height: 1;
+      }
+
+      .step-name {
+        display: block;
+        font-size: 1.12rem;
+        font-weight: 750;
+      }
+
+      .step-mode {
+        color: rgba(255, 253, 247, 0.48);
+        font-family: var(--mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .path-step.active .step-mode {
+        color: rgba(20, 21, 15, 0.6);
+      }
+
+      .step-arrow {
+        font-size: 1.4rem;
+      }
+
+      .path-detail {
+        position: sticky;
+        top: 94px;
+        align-self: start;
+        min-height: 430px;
+        padding: clamp(28px, 4vw, 48px);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: var(--radius);
+        background: var(--dark-panel);
+      }
+
+      .detail-label {
+        margin-bottom: 32px;
+        color: var(--acid);
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .path-detail h3 {
+        margin-bottom: 18px;
+        font-size: clamp(2rem, 4vw, 3.8rem);
+        letter-spacing: -0.055em;
+        line-height: 0.95;
+      }
+
+      .path-detail > p {
+        color: rgba(255, 253, 247, 0.66);
+        font-size: 1.05rem;
+      }
+
+      .detail-boundary {
+        margin-top: 40px;
+        padding-top: 22px;
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .detail-boundary span {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 253, 247, 0.4);
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .detail-boundary strong {
+        color: var(--acid);
+        font-family: var(--mono);
+        font-size: 0.85rem;
+      }
+
+      .architecture-map {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(340px, 0.5fr);
+        gap: 28px;
+      }
+
+      .layer-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .layer-card {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr) auto;
+        gap: 20px;
+        align-items: center;
+        min-height: 120px;
+        padding: 24px;
+        border: 1px solid var(--line-strong);
+        border-radius: 14px;
+        background: var(--white);
+        cursor: pointer;
+        text-align: left;
+        transition:
+          box-shadow 160ms ease,
+          transform 160ms ease;
+      }
+
+      .layer-card:hover {
+        box-shadow: 7px 7px 0 var(--ink);
+        transform: translate(-3px, -3px);
+      }
+
+      .layer-card.active {
+        background: var(--blue);
+        color: var(--white);
+        box-shadow: 9px 9px 0 var(--ink);
+        transform: translate(-4px, -4px);
+      }
+
+      .layer-icon {
+        display: grid;
+        width: 52px;
+        height: 52px;
+        border: 1px solid currentColor;
+        border-radius: 50%;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+
+      .layer-card h3 {
+        margin-bottom: 5px;
+        font-size: 1.28rem;
+      }
+
+      .layer-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .layer-card.active p {
+        color: rgba(255, 255, 255, 0.66);
+      }
+
+      .inspect-label {
+        font-family: var(--mono);
+        font-size: 0.64rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .architecture-detail {
+        position: sticky;
+        top: 94px;
+        align-self: start;
+        min-height: 480px;
+        padding: clamp(28px, 4vw, 44px);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--ink);
+        color: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .architecture-detail .detail-label {
+        color: var(--acid);
+      }
+
+      .architecture-detail h3 {
+        margin-bottom: 17px;
+        font-family: var(--serif);
+        font-size: clamp(2.4rem, 4vw, 4.3rem);
+        font-style: italic;
+        font-weight: 400;
+        letter-spacing: -0.045em;
+        line-height: 0.92;
+      }
+
+      .architecture-detail > p {
+        color: rgba(255, 253, 247, 0.67);
+      }
+
+      .architecture-detail ul {
+        display: grid;
+        gap: 11px;
+        margin: 32px 0 0;
+        padding: 24px 0 0 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .source-seam {
+        margin-top: 30px;
+        padding: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--acid);
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        overflow-wrap: anywhere;
+      }
+
+      .trace-canvas {
+        padding: clamp(26px, 5vw, 62px);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .trace-chain {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(120px, 1fr));
+        gap: 0;
+        align-items: center;
+      }
+
+      .trace-node-wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 34px;
+        align-items: center;
+      }
+
+      .trace-node-wrap:last-child {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .trace-node {
+        min-height: 175px;
+        padding: 20px;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        background: var(--paper);
+        cursor: pointer;
+        transition:
+          background 160ms ease,
+          transform 160ms ease;
+      }
+
+      .trace-node:hover,
+      .trace-node.active {
+        background: var(--acid);
+        transform: translateY(-6px);
+      }
+
+      .trace-node span {
+        display: block;
+        margin-bottom: 30px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .trace-node h3 {
+        margin-bottom: 8px;
+        font-size: 1.15rem;
+        line-height: 1.05;
+      }
+
+      .trace-node p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .trace-arrow {
+        text-align: center;
+        font-size: 1.45rem;
+      }
+
+      .trace-readout {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 18px;
+        align-items: start;
+        margin-top: 38px;
+        padding-top: 28px;
+        border-top: 1px solid var(--line);
+      }
+
+      .trace-readout .readout-status {
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: var(--blue);
+        color: white;
+        font-family: var(--mono);
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .trace-readout p {
+        margin-bottom: 0;
+        font-size: 1.05rem;
+      }
+
+      .two-paths {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 28px;
+      }
+
+      .path-card {
+        padding: 26px;
+        border: 1px solid var(--line-strong);
+        border-radius: 14px;
+      }
+
+      .path-card:first-child {
+        background: var(--blue-soft);
+      }
+
+      .path-card:last-child {
+        background: var(--coral-soft);
+      }
+
+      .path-card h3 {
+        margin-bottom: 11px;
+        font-size: 1.35rem;
+      }
+
+      .path-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      .state-diagram {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.72fr) 90px minmax(280px, 0.72fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .state-box {
+        padding: clamp(28px, 4vw, 48px);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: var(--radius);
+        background: var(--dark-panel);
+      }
+
+      .state-box h3 {
+        margin-bottom: 16px;
+        font-size: clamp(1.8rem, 3vw, 3rem);
+        letter-spacing: -0.045em;
+      }
+
+      .state-box p {
+        color: rgba(255, 253, 247, 0.62);
+      }
+
+      .state-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 28px;
+      }
+
+      .state-list span {
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        border-radius: 999px;
+        font-family: var(--mono);
+        font-size: 0.65rem;
+      }
+
+      .state-divider {
+        display: grid;
+        place-items: center;
+        color: var(--acid);
+        font-family: var(--serif);
+        font-size: 4.6rem;
+        font-style: italic;
+      }
+
+      .state-rule {
+        margin-top: 28px;
+        padding: 24px;
+        border: 1px solid var(--acid);
+        color: var(--acid);
+        font-family: var(--mono);
+        font-size: clamp(0.85rem, 1.3vw, 1.12rem);
+        text-align: center;
+      }
+
+      .roadmap {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid var(--line-strong);
+        background: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .roadmap-stage {
+        min-height: 420px;
+        padding: 27px;
+      }
+
+      .roadmap-stage + .roadmap-stage {
+        border-left: 1px solid var(--line-strong);
+      }
+
+      .roadmap-stage:nth-child(1) {
+        background: var(--acid);
+      }
+
+      .roadmap-stage:nth-child(2) {
+        background: var(--blue-soft);
+      }
+
+      .roadmap-stage:nth-child(3) {
+        background: var(--coral-soft);
+      }
+
+      .stage-number {
+        display: block;
+        margin-bottom: 54px;
+        font-family: var(--serif);
+        font-size: 4rem;
+        font-style: italic;
+        line-height: 0.8;
+      }
+
+      .roadmap-stage h3 {
+        min-height: 56px;
+        margin-bottom: 17px;
+        font-size: 1.4rem;
+        letter-spacing: -0.035em;
+        line-height: 1;
+      }
+
+      .roadmap-stage p {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .roadmap-stage ul {
+        display: grid;
+        gap: 8px;
+        margin: 25px 0 0;
+        padding: 20px 0 0 17px;
+        border-top: 1px solid var(--line);
+        font-size: 0.78rem;
+      }
+
+      .rules-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      .rules-panel {
+        padding: clamp(28px, 4vw, 48px);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--white);
+      }
+
+      .rules-panel:last-child {
+        background: var(--ink);
+        color: var(--white);
+      }
+
+      .rules-panel h3 {
+        margin-bottom: 34px;
+        font-size: clamp(1.9rem, 3vw, 3.2rem);
+        letter-spacing: -0.055em;
+        line-height: 0.96;
+      }
+
+      .rules-list {
+        display: grid;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: rule;
+      }
+
+      .rules-list li {
+        display: grid;
+        grid-template-columns: 35px minmax(0, 1fr);
+        gap: 12px;
+        padding: 16px 0;
+        border-top: 1px solid var(--line);
+        counter-increment: rule;
+      }
+
+      .rules-panel:last-child .rules-list li {
+        border-color: rgba(255, 255, 255, 0.16);
+        color: rgba(255, 253, 247, 0.72);
+      }
+
+      .rules-list li::before {
+        color: var(--blue);
+        content: counter(rule, decimal-leading-zero);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        font-weight: 800;
+      }
+
+      .rules-panel:last-child .rules-list li::before {
+        color: var(--coral);
+        content: "x";
+        font-size: 1rem;
+      }
+
+      .decision-panel {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(38px, 7vw, 90px);
+        border: 1px solid var(--line-strong);
+        background: var(--blue);
+        color: var(--white);
+        box-shadow: 12px 12px 0 var(--ink);
+      }
+
+      .decision-panel::after {
+        position: absolute;
+        top: -200px;
+        right: -180px;
+        width: 520px;
+        height: 520px;
+        border: 70px solid rgba(216, 255, 99, 0.95);
+        border-radius: 50%;
+        content: "";
+      }
+
+      .decision-content {
+        position: relative;
+        z-index: 1;
+        max-width: 900px;
+      }
+
+      .decision-panel .eyebrow {
+        color: var(--acid);
+      }
+
+      .decision-panel h2 {
+        max-width: 950px;
+        margin-bottom: 30px;
+        font-size: clamp(3.2rem, 7vw, 7.5rem);
+      }
+
+      .decision-panel p {
+        max-width: 730px;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: clamp(1rem, 1.5vw, 1.25rem);
+      }
+
+      .decision-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        max-width: 790px;
+        margin: 38px 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .decision-list li {
+        padding: 14px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+        font-family: var(--mono);
+        font-size: 0.77rem;
+      }
+
+      .decision-list li::before {
+        margin-right: 9px;
+        color: var(--acid);
+        content: "[ok]";
+        font-weight: 900;
+      }
+
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .primary-button,
+      .secondary-button {
+        min-height: 48px;
+        padding: 0 19px;
+        border: 1px solid var(--white);
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .primary-button {
+        background: var(--acid);
+        color: var(--ink);
+      }
+
+      .primary-button:hover {
+        background: var(--white);
+      }
+
+      .secondary-button {
+        background: transparent;
+        color: var(--white);
+      }
+
+      .secondary-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .copy-state {
+        min-height: 20px;
+        color: var(--acid);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        padding: 30px 4vw 50px;
+        border-top: 1px solid var(--line-strong);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 1080px) {
+        .path-explorer,
+        .architecture-map {
+          grid-template-columns: 1fr;
+        }
+
+        .path-detail,
+        .architecture-detail {
+          position: static;
+          min-height: 0;
+        }
+
+        .trace-chain {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+
+        .trace-node-wrap,
+        .trace-node-wrap:last-child {
+          grid-template-columns: 1fr;
+        }
+
+        .trace-arrow {
+          padding: 8px 0;
+          transform: rotate(90deg);
+        }
+
+        .roadmap {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .roadmap-stage:nth-child(3) {
+          border-top: 1px solid var(--line-strong);
+          border-left: 0;
+        }
+
+        .roadmap-stage:nth-child(4) {
+          border-top: 1px solid var(--line-strong);
+        }
+      }
+
+      @media (max-width: 760px) {
+        .nav-links a,
+        .status-pill {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+        }
+
+        h1 {
+          font-size: clamp(3.7rem, 21vw, 6rem);
+        }
+
+        .hero-grid,
+        .section-heading,
+        .contrast-grid,
+        .two-paths,
+        .rules-grid,
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+
+        .contrast-card + .contrast-card {
+          border-top: 1px solid var(--line-strong);
+          border-left: 0;
+        }
+
+        .principle-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .principle + .principle {
+          border-top: 1px solid var(--line-strong);
+          border-left: 0;
+        }
+
+        .path-tabs {
+          width: 100%;
+        }
+
+        .path-tab {
+          flex: 1;
+        }
+
+        .path-step {
+          grid-template-columns: 45px minmax(0, 1fr);
+        }
+
+        .step-arrow {
+          display: none;
+        }
+
+        .layer-card {
+          grid-template-columns: 48px minmax(0, 1fr);
+        }
+
+        .inspect-label {
+          display: none;
+        }
+
+        .state-divider {
+          min-height: 80px;
+          transform: rotate(90deg);
+        }
+
+        .roadmap {
+          grid-template-columns: 1fr;
+        }
+
+        .roadmap-stage + .roadmap-stage,
+        .roadmap-stage:nth-child(3) {
+          border-top: 1px solid var(--line-strong);
+          border-left: 0;
+        }
+
+        .roadmap-stage {
+          min-height: 0;
+        }
+
+        .decision-list {
+          grid-template-columns: 1fr;
+        }
+
+        footer {
+          display: grid;
+          gap: 12px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+    <style id="technical-theme">
+      :root {
+        --paper: #ffffff;
+        --paper-deep: #f6f8fa;
+        --ink: #1f2328;
+        --muted: #636c76;
+        --line: #d1d9e0;
+        --line-strong: #afb8c1;
+        --acid: #0969da;
+        --acid-deep: #1f883d;
+        --blue: #0969da;
+        --blue-soft: #ddf4ff;
+        --coral: #cf222e;
+        --coral-soft: #ffebe9;
+        --dark: #f6f8fa;
+        --dark-panel: #ffffff;
+        --white: #ffffff;
+        --shadow: none;
+        --radius: 8px;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        --serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      }
+
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.55;
+      }
+
+      .scroll-progress {
+        height: 2px;
+        background: var(--blue);
+      }
+
+      .site-nav {
+        min-height: 60px;
+        padding-right: max(24px, calc((100vw - 1160px) / 2));
+        padding-left: max(24px, calc((100vw - 1160px) / 2));
+        border-color: var(--line);
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(12px);
+      }
+
+      .brand {
+        gap: 10px;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+      }
+
+      .brand-mark {
+        width: 27px;
+        height: 27px;
+        border: 0;
+        border-radius: 6px;
+        background: #24292f;
+        color: #ffffff;
+        transform: none;
+      }
+
+      .nav-links {
+        gap: 20px;
+      }
+
+      .nav-links a {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .nav-links a:hover {
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .status-pill {
+        padding: 5px 9px;
+        border-color: var(--line);
+        background: var(--paper-deep);
+        color: var(--muted);
+        font-size: 0.62rem;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        background: #1f883d;
+        box-shadow: none;
+      }
+
+      main {
+        width: min(1160px, 100%);
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 96px 24px 72px;
+      }
+
+      .eyebrow {
+        gap: 9px;
+        margin-bottom: 18px;
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: none;
+      }
+
+      .eyebrow::before {
+        width: 20px;
+        height: 1px;
+      }
+
+      h1 {
+        max-width: 900px;
+        margin-bottom: 36px;
+        font-size: clamp(3.25rem, 7vw, 5.8rem);
+        font-weight: 650;
+        letter-spacing: -0.055em;
+        line-height: 0.98;
+      }
+
+      .hero-emphasis {
+        color: var(--blue);
+        font-family: inherit;
+        font-style: normal;
+        font-weight: inherit;
+        letter-spacing: inherit;
+        transform: none;
+      }
+
+      .hero-grid {
+        grid-template-columns: minmax(0, 1fr) 330px;
+        gap: 64px;
+        align-items: start;
+      }
+
+      .hero-copy {
+        max-width: 680px;
+        color: #3d444d;
+        font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+        line-height: 1.5;
+      }
+
+      .hero-copy strong {
+        color: var(--ink);
+        background: none;
+        font-weight: 600;
+      }
+
+      .hero-note {
+        padding: 22px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper-deep);
+        box-shadow: none;
+        transform: none;
+      }
+
+      .hero-note .note-label {
+        margin-bottom: 14px;
+        color: var(--muted);
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: none;
+      }
+
+      .hero-note .note-quote {
+        font-family: inherit;
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .hero-footer {
+        justify-content: flex-start;
+        gap: 28px;
+        margin-top: 64px;
+        padding-top: 16px;
+        border-color: var(--line);
+        color: var(--muted);
+        font-size: 0.64rem;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .hero-footer span + span::before {
+        margin-right: 28px;
+        color: var(--line-strong);
+        content: "/";
+      }
+
+      .section {
+        padding: 88px 24px;
+        border-color: var(--line);
+        scroll-margin-top: 60px;
+      }
+
+      .section-dark {
+        width: auto;
+        margin-left: 0;
+        padding-right: 24px;
+        padding-left: 24px;
+        border-top: 1px solid var(--line);
+        background: var(--paper-deep);
+        color: var(--ink);
+      }
+
+      .section-heading {
+        grid-template-columns: minmax(0, 1fr) 410px;
+        gap: 64px;
+        align-items: start;
+        margin-bottom: 48px;
+      }
+
+      .section-number,
+      .section-dark .section-number {
+        margin-bottom: 14px;
+        color: var(--muted);
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      h2 {
+        font-size: clamp(2.35rem, 5vw, 4rem);
+        font-weight: 650;
+        letter-spacing: -0.045em;
+        line-height: 1.02;
+      }
+
+      .section-intro,
+      .section-dark .section-intro {
+        max-width: 520px;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .contrast-grid {
+        overflow: hidden;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        box-shadow: none;
+      }
+
+      .contrast-card {
+        min-height: 280px;
+        padding: 36px;
+      }
+
+      .contrast-card + .contrast-card {
+        border-color: var(--line);
+      }
+
+      .contrast-card:first-child,
+      .contrast-card:last-child {
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      .contrast-card:first-child {
+        color: var(--muted);
+      }
+
+      .contrast-card:last-child {
+        background: var(--paper-deep);
+      }
+
+      .contrast-card:last-child::after {
+        display: none;
+      }
+
+      .card-kicker {
+        margin-bottom: 32px;
+        padding: 4px 8px;
+        border-color: var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 0.6rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .contrast-card h3 {
+        margin-bottom: 16px;
+        font-size: clamp(1.55rem, 3vw, 2.2rem);
+        font-weight: 600;
+        letter-spacing: -0.035em;
+        line-height: 1.1;
+      }
+
+      .contrast-card p {
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .principle-strip {
+        margin-top: 20px;
+        border-color: var(--line);
+      }
+
+      .principle {
+        padding: 18px;
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: none;
+      }
+
+      .principle + .principle {
+        border-color: var(--line);
+      }
+
+      .path-tabs {
+        margin-bottom: 24px;
+        padding: 3px;
+        border-color: var(--line);
+        background: var(--paper);
+      }
+
+      .path-tab {
+        padding: 7px 13px;
+        color: var(--muted);
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .path-tab[aria-selected="true"] {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .path-explorer {
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.65fr);
+        gap: 24px;
+      }
+
+      .path-track {
+        gap: 8px;
+      }
+
+      .path-step {
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: 14px;
+        min-height: 70px;
+        padding: 13px 16px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--ink);
+        transition:
+          border-color 120ms ease,
+          background 120ms ease;
+      }
+
+      .path-step:hover {
+        border-color: var(--line-strong);
+        transform: none;
+      }
+
+      .path-step.active {
+        border-color: var(--blue);
+        background: var(--blue-soft);
+        color: var(--ink);
+      }
+
+      .step-index {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        font-style: normal;
+        font-weight: 600;
+      }
+
+      .step-name {
+        font-size: 0.94rem;
+        font-weight: 600;
+      }
+
+      .step-mode,
+      .path-step.active .step-mode {
+        color: var(--muted);
+        font-size: 0.58rem;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .step-arrow {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .path-detail {
+        top: 84px;
+        min-height: 360px;
+        padding: 30px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      .detail-label,
+      .section-dark .detail-label {
+        margin-bottom: 26px;
+        color: var(--muted);
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: none;
+      }
+
+      .path-detail h3 {
+        margin-bottom: 14px;
+        font-size: 1.8rem;
+        font-weight: 600;
+        letter-spacing: -0.035em;
+        line-height: 1.1;
+      }
+
+      .path-detail > p {
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .detail-boundary {
+        margin-top: 32px;
+        padding-top: 18px;
+        border-color: var(--line);
+      }
+
+      .detail-boundary span {
+        color: var(--muted);
+        font-size: 0.58rem;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .detail-boundary strong {
+        color: var(--blue);
+        font-size: 0.72rem;
+      }
+
+      .architecture-map {
+        grid-template-columns: minmax(0, 1fr) minmax(330px, 0.62fr);
+        gap: 24px;
+      }
+
+      .layer-stack {
+        gap: 8px;
+      }
+
+      .layer-card {
+        grid-template-columns: 45px minmax(0, 1fr) auto;
+        gap: 16px;
+        min-height: 92px;
+        padding: 18px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        transition:
+          border-color 120ms ease,
+          background 120ms ease;
+      }
+
+      .layer-card:hover {
+        border-color: var(--line-strong);
+        box-shadow: none;
+        transform: none;
+      }
+
+      .layer-card.active {
+        border-color: var(--blue);
+        background: var(--blue-soft);
+        color: var(--ink);
+        box-shadow: none;
+        transform: none;
+      }
+
+      .layer-icon {
+        width: 36px;
+        height: 36px;
+        border-color: var(--line-strong);
+        border-radius: 6px;
+        color: var(--muted);
+        font-size: 0.6rem;
+      }
+
+      .layer-card h3 {
+        margin-bottom: 3px;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .layer-card p,
+      .layer-card.active p {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .inspect-label {
+        color: var(--muted);
+        font-size: 0.58rem;
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .architecture-detail {
+        top: 84px;
+        min-height: 460px;
+        padding: 34px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--ink);
+        box-shadow: none;
+      }
+
+      .architecture-detail .detail-label {
+        color: var(--muted);
+      }
+
+      .architecture-detail h3 {
+        margin-bottom: 15px;
+        font-family: inherit;
+        font-size: 2rem;
+        font-style: normal;
+        font-weight: 600;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+      }
+
+      .architecture-detail > p {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .architecture-detail ul {
+        gap: 9px;
+        margin-top: 28px;
+        padding-top: 20px;
+        border-color: var(--line);
+        color: #3d444d;
+        font-size: 0.85rem;
+      }
+
+      .source-seam {
+        margin-top: 26px;
+        padding: 12px;
+        border-color: var(--line);
+        border-radius: 6px;
+        background: var(--paper-deep);
+        color: var(--ink);
+        font-size: 0.68rem;
+      }
+
+      .trace-canvas {
+        padding: 34px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        box-shadow: none;
+      }
+
+      .trace-node {
+        min-height: 150px;
+        padding: 18px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        transition:
+          border-color 120ms ease,
+          background 120ms ease;
+      }
+
+      .trace-node:hover,
+      .trace-node.active {
+        border-color: var(--blue);
+        background: var(--blue-soft);
+        transform: none;
+      }
+
+      .trace-node span {
+        margin-bottom: 25px;
+        color: var(--muted);
+        font-size: 0.58rem;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .trace-node h3 {
+        font-size: 0.98rem;
+        font-weight: 600;
+      }
+
+      .trace-node p {
+        color: var(--muted);
+        font-size: 0.74rem;
+      }
+
+      .trace-arrow {
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .trace-readout {
+        margin-top: 30px;
+        padding-top: 22px;
+        border-color: var(--line);
+      }
+
+      .trace-readout .readout-status {
+        background: var(--blue-soft);
+        color: var(--blue);
+        font-size: 0.58rem;
+      }
+
+      .trace-readout p {
+        color: #3d444d;
+        font-size: 0.9rem;
+      }
+
+      .path-card {
+        padding: 22px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+      }
+
+      .path-card:first-child,
+      .path-card:last-child {
+        background: var(--paper);
+      }
+
+      .path-card h3 {
+        margin-bottom: 8px;
+        font-size: 1rem;
+      }
+
+      .path-card p {
+        font-size: 0.86rem;
+      }
+
+      .state-diagram {
+        grid-template-columns: minmax(280px, 1fr) 56px minmax(280px, 1fr);
+        gap: 16px;
+      }
+
+      .state-box {
+        padding: 32px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      .state-box h3 {
+        margin-bottom: 13px;
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+      }
+
+      .state-box p {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .state-list {
+        margin-top: 24px;
+      }
+
+      .state-list span {
+        padding: 5px 8px;
+        border-color: var(--line);
+        color: var(--muted);
+        font-size: 0.58rem;
+      }
+
+      .state-divider {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 1.2rem;
+        font-style: normal;
+      }
+
+      .state-rule {
+        margin-top: 20px;
+        padding: 16px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--muted);
+        font-size: 0.74rem;
+      }
+
+      .roadmap {
+        overflow: hidden;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        box-shadow: none;
+      }
+
+      .roadmap-stage {
+        min-height: 350px;
+        padding: 26px;
+        background: var(--paper);
+      }
+
+      .roadmap-stage + .roadmap-stage {
+        border-color: var(--line);
+      }
+
+      .roadmap-stage:nth-child(1),
+      .roadmap-stage:nth-child(2),
+      .roadmap-stage:nth-child(3) {
+        background: var(--paper);
+      }
+
+      .stage-number {
+        width: fit-content;
+        margin-bottom: 38px;
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.62rem;
+        font-style: normal;
+        line-height: 1;
+      }
+
+      .roadmap-stage h3 {
+        min-height: 46px;
+        margin-bottom: 13px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      .roadmap-stage p {
+        font-size: 0.82rem;
+      }
+
+      .roadmap-stage ul {
+        gap: 7px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-color: var(--line);
+        color: #3d444d;
+        font-size: 0.72rem;
+      }
+
+      .rules-grid {
+        gap: 16px;
+      }
+
+      .rules-panel,
+      .rules-panel:last-child {
+        padding: 32px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      .rules-panel h3 {
+        margin-bottom: 26px;
+        font-size: 1.45rem;
+        font-weight: 600;
+        letter-spacing: -0.035em;
+      }
+
+      .rules-list li,
+      .rules-panel:last-child .rules-list li {
+        padding: 13px 0;
+        border-color: var(--line);
+        color: #3d444d;
+        font-size: 0.86rem;
+      }
+
+      .rules-list li::before {
+        color: var(--muted);
+        font-size: 0.62rem;
+      }
+
+      .rules-panel:last-child .rules-list li::before {
+        color: var(--coral);
+      }
+
+      .decision-panel {
+        padding: 56px;
+        border-color: var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+        color: var(--ink);
+        box-shadow: none;
+      }
+
+      .decision-panel::after {
+        display: none;
+      }
+
+      .decision-panel .eyebrow {
+        color: var(--muted);
+      }
+
+      .decision-panel h2 {
+        max-width: 760px;
+        margin-bottom: 22px;
+        font-size: clamp(2.4rem, 5vw, 4.25rem);
+      }
+
+      .decision-panel p {
+        max-width: 690px;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .decision-list {
+        gap: 8px;
+        margin: 30px 0;
+      }
+
+      .decision-list li {
+        padding: 11px 13px;
+        border-color: var(--line);
+        border-radius: 6px;
+        background: var(--paper-deep);
+        color: #3d444d;
+        font-size: 0.68rem;
+      }
+
+      .decision-list li::before {
+        color: #1f883d;
+        content: "check";
+        font-size: 0.6rem;
+      }
+
+      .primary-button,
+      .secondary-button {
+        min-height: 40px;
+        padding: 0 14px;
+        border-color: #24292f;
+        border-radius: 6px;
+        font-size: 0.66rem;
+        letter-spacing: 0;
+        text-transform: none;
+      }
+
+      .primary-button {
+        background: #24292f;
+        color: #ffffff;
+      }
+
+      .primary-button:hover {
+        background: #32383f;
+      }
+
+      .secondary-button {
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      .secondary-button:hover {
+        background: var(--paper-deep);
+      }
+
+      .copy-state {
+        color: #1f883d;
+      }
+
+      .control-map {
+        padding: 34px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+      }
+
+      .control-inputs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .control-card {
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--paper-deep);
+      }
+
+      .control-card code,
+      .command-core code {
+        display: block;
+        margin-bottom: 18px;
+        color: var(--blue);
+        font-family: var(--mono);
+        font-size: 0.64rem;
+      }
+
+      .control-card h3,
+      .command-core h3 {
+        margin-bottom: 8px;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
+      .control-card p,
+      .command-core p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .flow-marker {
+        display: grid;
+        height: 52px;
+        place-items: center;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.8rem;
+      }
+
+      .command-core {
+        max-width: 620px;
+        margin: 0 auto;
+        padding: 26px;
+        border: 1px solid var(--blue);
+        border-radius: var(--radius);
+        background: var(--blue-soft);
+      }
+
+      .command-core code {
+        margin-bottom: 12px;
+      }
+
+      .command-sequence {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+
+      .command-sequence span {
+        padding: 16px 10px;
+        color: #3d444d;
+        font-family: var(--mono);
+        font-size: 0.66rem;
+        text-align: center;
+      }
+
+      .command-sequence span + span {
+        border-left: 1px solid var(--line);
+      }
+
+      .control-rule {
+        margin: 20px 0 0;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        text-align: center;
+      }
+
+      .control-rule strong {
+        color: var(--ink);
+      }
+
+      .lifecycle-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .lifecycle-card {
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+      }
+
+      .lifecycle-card > span {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.62rem;
+      }
+
+      .lifecycle-card h3 {
+        margin: 12px 0 24px;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      .lifecycle-track {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .lifecycle-track span {
+        padding: 6px 9px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--paper-deep);
+        color: #3d444d;
+        font-family: var(--mono);
+        font-size: 0.62rem;
+      }
+
+      .lifecycle-track b {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        font-weight: 400;
+      }
+
+      .loop-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .loop-card {
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--paper);
+      }
+
+      .loop-card h3 {
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .loop-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 0.66rem;
+      }
+
+      footer {
+        width: min(1160px, 100%);
+        margin: 0 auto;
+        padding: 26px 24px 40px;
+        border-color: var(--line);
+        color: var(--muted);
+        font-size: 0.6rem;
+        text-transform: none;
+      }
+
+      @media (max-width: 900px) {
+        .hero-grid,
+        .section-heading,
+        .path-explorer,
+        .architecture-map,
+        .lifecycle-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-grid,
+        .section-heading {
+          gap: 32px;
+        }
+
+        .hero-note {
+          max-width: 440px;
+        }
+
+        .path-detail,
+        .architecture-detail {
+          position: static;
+          min-height: 0;
+        }
+
+        .roadmap {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .roadmap-stage:nth-child(3) {
+          border-top: 1px solid var(--line);
+          border-left: 0;
+        }
+
+        .roadmap-stage:nth-child(4) {
+          border-top: 1px solid var(--line);
+        }
+      }
+
+      @media (max-width: 680px) {
+        .site-nav {
+          padding-right: 16px;
+          padding-left: 16px;
+        }
+
+        .hero {
+          padding: 64px 16px 52px;
+        }
+
+        h1 {
+          font-size: clamp(2.8rem, 15vw, 4rem);
+        }
+
+        .hero-footer {
+          display: grid;
+          gap: 7px;
+          margin-top: 44px;
+        }
+
+        .hero-footer span + span::before {
+          display: none;
+        }
+
+        .section,
+        .section-dark {
+          padding: 64px 16px;
+        }
+
+        h2 {
+          font-size: clamp(2.1rem, 11vw, 3rem);
+        }
+
+        .contrast-card {
+          min-height: 0;
+          padding: 26px;
+        }
+
+        .control-inputs,
+        .loop-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .control-map {
+          padding: 20px;
+        }
+
+        .command-sequence {
+          grid-template-columns: 1fr;
+        }
+
+        .command-sequence span + span {
+          border-top: 1px solid var(--line);
+          border-left: 0;
+        }
+
+        .path-step {
+          grid-template-columns: 32px minmax(0, 1fr);
+        }
+
+        .path-detail,
+        .architecture-detail,
+        .trace-canvas,
+        .state-box,
+        .rules-panel,
+        .rules-panel:last-child {
+          padding: 24px;
+        }
+
+        .trace-node {
+          min-height: 130px;
+        }
+
+        .trace-readout {
+          grid-template-columns: 1fr;
+        }
+
+        .state-diagram {
+          grid-template-columns: 1fr;
+        }
+
+        .state-divider {
+          min-height: 44px;
+          transform: none;
+        }
+
+        .roadmap {
+          grid-template-columns: 1fr;
+        }
+
+        .roadmap-stage {
+          min-height: 0;
+        }
+
+        .roadmap-stage + .roadmap-stage,
+        .roadmap-stage:nth-child(3) {
+          border-top: 1px solid var(--line);
+          border-left: 0;
+        }
+
+        .decision-panel {
+          padding: 34px 24px;
+        }
+
+        .decision-list {
+          grid-template-columns: 1fr;
+        }
+
+        footer {
+          padding-right: 16px;
+          padding-left: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a class="brand" href="#top">
+        <span class="brand-mark">B</span>
+        Backstop / Harness
+      </a>
+      <div class="nav-links">
+        <a href="#idea">Idea</a>
+        <a href="#lifecycle">Lifecycle</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#first-slice">First slice</a>
+        <span class="status-pill"><span class="status-dot"></span>Design exploration</span>
+      </div>
+    </nav>
+
+    <main id="top">
+      <header class="hero">
+        <p class="eyebrow">A new operating model for Backstop + OpenCode V2</p>
+        <h1>Flow freely.<br /><span class="hero-emphasis">Commit</span> deliberately.</h1>
+        <div class="hero-grid">
+          <p class="hero-copy">
+            The agent stays conversational and adaptive, then crosses into deterministic workflows when the work becomes
+            real. <strong>Structure is not the intake form. It is the commitment boundary.</strong>
+          </p>
+          <aside class="hero-note" aria-label="Core design principle">
+            <p class="note-label">The whole idea, in one line</p>
+            <p class="note-quote">Fluid outside.<br />Deterministic at the boundaries.</p>
+          </aside>
+        </div>
+        <div class="hero-footer">
+          <span>Conversation discovers</span>
+          <span>Artifacts commit</span>
+          <span>Gates prove</span>
+        </div>
+      </header>
+
+      <section class="section" id="idea">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">01 / THE SHIFT</span>
+            <h2>Not less rigor.<br />Better timing.</h2>
+          </div>
+          <p class="section-intro">
+            The current insight came from watching the agent work: it explored freely, captured real gaps as issues,
+            created plans when execution became concrete, delegated the work, and still ran the gates.
+          </p>
+        </div>
+
+        <div class="contrast-grid">
+          <article class="contrast-card">
+            <span class="card-kicker">Pipeline-first</span>
+            <h3>Structure before understanding</h3>
+            <p>
+              Force every conversation through bundle, spec, and plan ceremony before the shape of the problem is even
+              known. The workflow is rigorous, but the entry cost breaks momentum.
+            </p>
+          </article>
+          <article class="contrast-card">
+            <span class="card-kicker">Ambient orchestration</span>
+            <h3>Structure at commitment</h3>
+            <p>
+              Let investigation breathe. When a durable requirement, defect, decision, or commitment appears, capture it
+              through a typed boundary and let the runtime enforce the rest.
+            </p>
+          </article>
+        </div>
+
+        <div class="principle-strip" aria-label="Three principles">
+          <div class="principle">Explore without ceremony</div>
+          <div class="principle">Commit through typed transitions</div>
+          <div class="principle">Complete only with evidence</div>
+        </div>
+      </section>
+
+      <section class="section section-dark" id="flow">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">02 / ENTER &amp; EXIT</span>
+            <h2>One conversation.<br />Two operating modes.</h2>
+          </div>
+          <p class="section-intro">
+            Click through either path. The agent does not become a different product when work gets serious; it crosses
+            a visible boundary into runtime-supervised execution, then returns with evidence.
+          </p>
+        </div>
+
+        <div class="path-tabs" role="tablist" aria-label="Workflow path">
+          <button class="path-tab" role="tab" aria-selected="true" data-path="reactive">Reactive issue</button>
+          <button class="path-tab" role="tab" aria-selected="false" data-path="product">Product commitment</button>
+        </div>
+
+        <div class="path-explorer">
+          <div class="path-track" id="path-track" aria-live="polite"></div>
+          <aside class="path-detail" id="path-detail">
+            <p class="detail-label">Selected moment</p>
+            <h3 id="path-detail-title"></h3>
+            <p id="path-detail-copy"></p>
+            <div class="detail-boundary">
+              <span>Runtime contract</span>
+              <strong id="path-detail-boundary"></strong>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="controls">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">03 / CONTROL SURFACES</span>
+            <h2>Three ways in.<br />One way through.</h2>
+          </div>
+          <p class="section-intro">
+            Natural-language tools are the convenient path. Slash commands and UI actions are deterministic fallbacks.
+            None of them owns lifecycle state.
+          </p>
+        </div>
+
+        <div class="control-map">
+          <div class="control-inputs">
+            <article class="control-card">
+              <code>agent tool</code>
+              <h3>Natural user cues</h3>
+              <p>The agent maps capture, proceed, pause, or explain to a typed command when intent is unambiguous.</p>
+            </article>
+            <article class="control-card">
+              <code>/backstop ...</code>
+              <h3>Slash command</h3>
+              <p>
+                A deterministic override that invokes the command handler directly without routing through the model.
+              </p>
+            </article>
+            <article class="control-card">
+              <code>ui action</code>
+              <h3>Direct control</h3>
+              <p>Buttons and forms use the same authorization, idempotency, validation, and audit contract.</p>
+            </article>
+          </div>
+          <div class="flow-marker" aria-hidden="true">|<br />v</div>
+          <article class="command-core">
+            <code>Backstop.CommandHandler</code>
+            <h3>One typed application boundary</h3>
+            <p>
+              Loads current state, validates permission and idempotency, then submits intent to the transition core.
+            </p>
+          </article>
+          <div class="flow-marker" aria-hidden="true">|<br />v</div>
+          <div class="command-sequence" aria-label="Deterministic command processing sequence">
+            <span>validate command</span>
+            <span>decide transition</span>
+            <span>append event</span>
+            <span>project state</span>
+            <span>coordinate work</span>
+          </div>
+          <p class="control-rule">
+            <strong>Tools submit commands.</strong> Only the state machine emits lifecycle events.
+          </p>
+        </div>
+      </section>
+
+      <section class="section section-dark" id="lifecycle">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">04 / THE LIFECYCLE</span>
+            <h2>The lifecycle,<br />plainly.</h2>
+          </div>
+          <p class="section-intro">
+            Product commitments take the full path. Concrete defects take the shorter reactive path. Both converge on
+            runtime verification and structured review before completion.
+          </p>
+        </div>
+
+        <div class="lifecycle-grid">
+          <article class="lifecycle-card">
+            <span>Product work</span>
+            <h3>From exploration to delivered requirement</h3>
+            <div class="lifecycle-track">
+              <span>Explore</span><b>&gt;</b><span>Bundle</span><b>&gt;</b><span>Approve</span><b>&gt;</b
+              ><span>Directive</span><b>&gt;</b><span>Spec</span><b>&gt;</b><span>Plan</span><b>&gt;</b
+              ><span>Implement</span><b>&gt;</b><span>Verify</span><b>&gt;</b><span>Review</span><b>&gt;</b
+              ><span>Complete</span>
+            </div>
+          </article>
+          <article class="lifecycle-card">
+            <span>Reactive work</span>
+            <h3>From concrete defect to proven repair</h3>
+            <div class="lifecycle-track">
+              <span>Explore</span><b>&gt;</b><span>Issue</span><b>&gt;</b><span>Plan</span><b>&gt;</b
+              ><span>Implement</span><b>&gt;</b><span>Verify</span><b>&gt;</b><span>Review</span><b>&gt;</b
+              ><span>Complete</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="loop-grid">
+          <article class="loop-card">
+            <h3>Every authored artifact has a review loop</h3>
+            <p>Draft &gt; Validate &gt; Review &gt; Approve, or revise and repeat.</p>
+          </article>
+          <article class="loop-card">
+            <h3>Every implementation has an evidence loop</h3>
+            <p>Task &gt; Runtime gate &gt; Review &gt; Complete, or repair and rerun.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="architecture">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">05 / SYSTEM SHAPE</span>
+            <h2>Five planes.<br />One durable spine.</h2>
+          </div>
+          <p class="section-intro">
+            OpenCode V2 already supplies durable session input, typed tools, aggregate-sequenced events, execution
+            routing, and scoped permissions. Backstop adds domain authority, not another chat loop.
+          </p>
+        </div>
+
+        <div class="architecture-map">
+          <div class="layer-stack" id="layer-stack">
+            <button class="layer-card active" data-layer="conversation">
+              <span class="layer-icon">01</span>
+              <span
+                ><h3>Conversation plane</h3>
+                <p>Freeform discovery, recovery, and human judgment.</p></span
+              >
+              <span class="inspect-label">Inspect &gt;</span>
+            </button>
+            <button class="layer-card" data-layer="control">
+              <span class="layer-icon">02</span>
+              <span
+                ><h3>Control plane</h3>
+                <p>Lifecycle, lineage, transition rules, and authority.</p></span
+              >
+              <span class="inspect-label">Inspect &gt;</span>
+            </button>
+            <button class="layer-card" data-layer="execution">
+              <span class="layer-icon">03</span>
+              <span
+                ><h3>Execution plane</h3>
+                <p>Runtime jobs, agent attempts, pause, cancel, and repair.</p></span
+              >
+              <span class="inspect-label">Inspect &gt;</span>
+            </button>
+            <button class="layer-card" data-layer="evidence">
+              <span class="layer-icon">04</span>
+              <span
+                ><h3>Evidence plane</h3>
+                <p>Validation, gates, reviews, and claim-level proof.</p></span
+              >
+              <span class="inspect-label">Inspect &gt;</span>
+            </button>
+            <button class="layer-card" data-layer="read">
+              <span class="layer-icon">05</span>
+              <span
+                ><h3>Read plane</h3>
+                <p>API, projections, blockers, timelines, and sidebar status.</p></span
+              >
+              <span class="inspect-label">Inspect &gt;</span>
+            </button>
+          </div>
+          <aside class="architecture-detail" aria-live="polite">
+            <p class="detail-label" id="layer-label"></p>
+            <h3 id="layer-title"></h3>
+            <p id="layer-copy"></p>
+            <ul id="layer-points"></ul>
+            <div class="source-seam" id="layer-seam"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="traceability">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">06 / TRACEABILITY</span>
+            <h2>Every promise earns a proof.</h2>
+          </div>
+          <p class="section-intro">
+            Requirements and claims become a live graph, not prose checked once during authoring. Click each node to see
+            the deterministic question the harness can answer.
+          </p>
+        </div>
+
+        <div class="trace-canvas">
+          <div class="trace-chain" id="trace-chain">
+            <div class="trace-node-wrap">
+              <button class="trace-node active" data-trace="requirement">
+                <span>Promise</span>
+                <h3>Bundle requirement</h3>
+                <p>What the product commits to deliver.</p>
+              </button>
+              <div class="trace-arrow">&rarr;</div>
+            </div>
+            <div class="trace-node-wrap">
+              <button class="trace-node" data-trace="claim">
+                <span>Demonstration</span>
+                <h3>Spec claim</h3>
+                <p>What must be observably true.</p>
+              </button>
+              <div class="trace-arrow">&rarr;</div>
+            </div>
+            <div class="trace-node-wrap">
+              <button class="trace-node" data-trace="task">
+                <span>Execution</span>
+                <h3>Plan task</h3>
+                <p>What work is responsible for the claim.</p>
+              </button>
+              <div class="trace-arrow">&rarr;</div>
+            </div>
+            <div class="trace-node-wrap">
+              <button class="trace-node" data-trace="test">
+                <span>Observation</span>
+                <h3>Test or gate</h3>
+                <p>How the claim is measured.</p>
+              </button>
+              <div class="trace-arrow">&rarr;</div>
+            </div>
+            <div class="trace-node-wrap">
+              <button class="trace-node" data-trace="evidence">
+                <span>Receipt</span>
+                <h3>Current evidence</h3>
+                <p>Proof tied to this exact revision.</p>
+              </button>
+            </div>
+          </div>
+
+          <div class="trace-readout" aria-live="polite">
+            <span class="readout-status">Deterministic query</span>
+            <p id="trace-readout"></p>
+          </div>
+        </div>
+
+        <div class="two-paths">
+          <article class="path-card">
+            <h3>Product work</h3>
+            <p>Bundle requirement -> spec claim -> plan task -> test -> revision-specific evidence.</p>
+          </article>
+          <article class="path-card">
+            <h3>Reactive work</h3>
+            <p>
+              Issue -> violated claim or explicit repair obligation -> issue-backed plan -> evidence. No orphan fixes.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section section-dark" id="authority">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">07 / AUTHORITY</span>
+            <h2>Content and state are different facts.</h2>
+          </div>
+          <p class="section-intro">
+            Files remain excellent authored projections. They should not silently rewrite runtime lifecycle. Every
+            review, gate, and implementation attempt points at an exact artifact revision.
+          </p>
+        </div>
+
+        <div class="state-diagram">
+          <article class="state-box">
+            <p class="detail-label">Files own</p>
+            <h3>Artifact content</h3>
+            <p>Requirements, claims, plans, contracts, decisions, and human-readable explanations.</p>
+            <div class="state-list"><span>revision hash</span><span>source path</span><span>authored text</span></div>
+          </article>
+          <div class="state-divider" aria-hidden="true">!=</div>
+          <article class="state-box">
+            <p class="detail-label">Runtime owns</p>
+            <h3>Lifecycle state</h3>
+            <p>Approval, commitment, active attempts, verification status, pause, cancellation, and completion.</p>
+            <div class="state-list">
+              <span>aggregate version</span><span>attempt id</span><span>evidence refs</span>
+            </div>
+          </article>
+        </div>
+        <div class="state-rule">An edit creates a new revision. It never rewrites history or inherits stale proof.</div>
+      </section>
+
+      <section class="section" id="first-slice">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">08 / START SMALL</span>
+            <h2>The first vertical story.</h2>
+          </div>
+          <p class="section-intro">
+            Prove the architecture with the workflow that inspired it: a freeform conversation discovers a defect, then
+            the runtime carries it through issue, plan, implementation, gate, and review.
+          </p>
+        </div>
+
+        <div class="roadmap">
+          <article class="roadmap-stage">
+            <span class="stage-number">1</span>
+            <h3>Prove the V2 boundary</h3>
+            <p>Make one durable crossing from conversation into Backstop.</p>
+            <ul>
+              <li>Backstop primary agent</li>
+              <li>Typed capture_issue tool</li>
+              <li>EventV2 persistence</li>
+              <li>Idempotent replay</li>
+            </ul>
+          </article>
+          <article class="roadmap-stage">
+            <span class="stage-number">2</span>
+            <h3>Add deterministic discipline</h3>
+            <p>Make completeness and authority executable rather than aspirational.</p>
+            <ul>
+              <li>Strict CLI protocol</li>
+              <li>Artifact revisions</li>
+              <li>Traceability graph</li>
+              <li>Transition guards</li>
+            </ul>
+          </article>
+          <article class="roadmap-stage">
+            <span class="stage-number">3</span>
+            <h3>Execute one real workflow</h3>
+            <p>Let runtime-owned attempts carry a small issue all the way through.</p>
+            <ul>
+              <li>V2 child agents</li>
+              <li>Supervised task</li>
+              <li>Runtime final gate</li>
+              <li>Structured review</li>
+            </ul>
+          </article>
+          <article class="roadmap-stage">
+            <span class="stage-number">4</span>
+            <h3>Surface the control plane</h3>
+            <p>Give humans a crisp view without making the UI authoritative.</p>
+            <ul>
+              <li>Protocol endpoints</li>
+              <li>Durable subscriptions</li>
+              <li>Sidebar status</li>
+              <li>Human controls</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="rules">
+        <div class="section-heading">
+          <div>
+            <span class="section-number">09 / GUARDRAILS</span>
+            <h2>Preserve the lessons.<br />Retire the scaffolding.</h2>
+          </div>
+          <p class="section-intro">
+            The original runtime remains a reference corpus. The new fork selectively rehydrates proven invariants while
+            refusing accidental complexity.
+          </p>
+        </div>
+
+        <div class="rules-grid">
+          <article class="rules-panel">
+            <h3>Keep as non-negotiable</h3>
+            <ol class="rules-list">
+              <li>Typed lifecycle states and legal transitions</li>
+              <li>Requirements, claims, tasks, tests, and evidence linked end to end</li>
+              <li>Runtime-owned verification and final-evidence policy</li>
+              <li>Durable pause, cancel, retry, and late-result suppression</li>
+              <li>Structured writer and reviewer outcomes</li>
+              <li>Explicit authority and conflict reconciliation</li>
+            </ol>
+          </article>
+          <article class="rules-panel">
+            <h3>Do not port literally</h3>
+            <ol class="rules-list">
+              <li>Synthetic user messages for automatic handoffs</li>
+              <li>Global target-directory state</li>
+              <li>Regex inference of identity, evidence, or reviewer intent</li>
+              <li>Stringly lifecycle states and timestamp-only freshness</li>
+              <li>GET requests with mutation or dispatch side effects</li>
+              <li>Agent prose accepted as verification</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="decision">
+        <div class="decision-panel">
+          <div class="decision-content">
+            <p class="eyebrow">Recommended starting position</p>
+            <h2>Build the spine, not the whole skeleton.</h2>
+            <p>
+              Start with one reactive issue flow on native OpenCode V2. Let EventV2 own lifecycle history. Keep the Go
+              Backstop engine canonical. Add child-agent execution only after the first typed boundary survives replay.
+            </p>
+            <ul class="decision-list">
+              <li>Native V2 for new behavior</li>
+              <li>EventV2 as lifecycle log</li>
+              <li>Go engine stays canonical</li>
+              <li>Issue -> plan is the first path</li>
+            </ul>
+            <div class="action-row">
+              <button class="primary-button" id="copy-brief">Copy build brief</button>
+              <a
+                class="secondary-button"
+                href="#top"
+                style="display: inline-grid; place-items: center; text-decoration: none"
+                >Back to top</a
+              >
+              <span class="copy-state" id="copy-state" aria-live="polite"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Backstop Harness / Architecture Explainer</span>
+      <span>Built as a single portable HTML artifact</span>
+      <span>OpenCode V2 / July 2026</span>
+    </footer>
+
+    <script>
+      const pathData = {
+        reactive: [
+          {
+            name: "Explore freely",
+            mode: "Conversation plane",
+            copy: "Inspect code, recover prior context, reproduce a failure, and form hypotheses without manufacturing an artifact for every thought.",
+            boundary: "No durable work unit yet",
+          },
+          {
+            name: "Capture the issue",
+            mode: "Typed boundary",
+            copy: "Once the defect is concrete, the agent calls a structured tool. The runtime creates the issue, records provenance, and gives it a durable identity.",
+            boundary: "capture_issue -> work_unit.created",
+          },
+          {
+            name: "Plan the repair",
+            mode: "Structured workflow",
+            copy: "The issue cites the violated claim or declares explicit repair obligations. A plan maps each obligation to bounded tasks and verification.",
+            boundary: "Traceability and plan completeness must pass",
+          },
+          {
+            name: "Execute under supervision",
+            mode: "Runtime-owned job",
+            copy: "An implementation attempt owns an explicit file set and task. Pause, cancellation, repair, and stale-result suppression are runtime concerns, not prompt etiquette.",
+            boundary: "Only the active attempt may advance state",
+          },
+          {
+            name: "Prove and review",
+            mode: "Evidence plane",
+            copy: "The runtime runs the final gate and records evidence tied to the exact artifact and implementation revision. A reviewer judges fit; it cannot forge proof.",
+            boundary: "Current final evidence + approved verdict",
+          },
+          {
+            name: "Return with receipts",
+            mode: "Conversation plane",
+            copy: "The ambient agent returns to the human with the outcome, evidence, remaining risks, and any newly discovered follow-on, without carrying hidden lifecycle state in chat.",
+            boundary: "Projection is authoritative; chat explains it",
+          },
+        ],
+        product: [
+          {
+            name: "Explore the opportunity",
+            mode: "Conversation plane",
+            copy: "Discuss goals, tradeoffs, sharp edges, and possible approaches. The exploration remains fluid until there is a direction worth committing to.",
+            boundary: "Questions may remain; commitment has not begun",
+          },
+          {
+            name: "Commit a bundle",
+            mode: "Human boundary",
+            copy: "A bundle captures the goal, requirements, open questions, and explicit exclusions. Human signoff turns exploration into a product commitment.",
+            boundary: "Approved bundle -> filed directive",
+          },
+          {
+            name: "Derive the spec",
+            mode: "Agent workflow",
+            copy: "The runtime dispatches writer and reviewer attempts. Every requirement gains one or more observable claims and verification criteria.",
+            boundary: "Every requirement must be claimed",
+          },
+          {
+            name: "Build an executable plan",
+            mode: "Agent workflow",
+            copy: "Tasks reference claims, dependencies are acyclic, file sets are bounded, and verification follows implementation. The plan is executable data.",
+            boundary: "Every implementation claim must be covered",
+          },
+          {
+            name: "Implement and prove",
+            mode: "Runtime-owned jobs",
+            copy: "The coordinator schedules attempts, verifies task evidence, runs gates itself, and sends current evidence to the implementation reviewer.",
+            boundary: "No self-certification by the model",
+          },
+          {
+            name: "Close the loop",
+            mode: "Conversation plane",
+            copy: "The human sees delivered requirements, current claim evidence, known gaps, and the exact state of the commitment. New discoveries can begin another freeform loop.",
+            boundary: "Delivered means traceably proven",
+          },
+        ],
+      }
+
+      const layerData = {
+        conversation: {
+          label: "Plane 01 / Human + model",
+          title: "Fluid by default",
+          copy: "A visible Backstop primary agent can explore, debug, recover context, and ask questions without forcing every conversational branch into an artifact.",
+          points: ["Durable prompt admission", "Typed tools at commitment points", "No lifecycle truth hidden in chat"],
+          seam: "AgentV2 + SessionV2.prompt + Tool.make",
+        },
+        control: {
+          label: "Plane 02 / Domain authority",
+          title: "The durable spine",
+          copy: "Commands load the current work-unit aggregate, enforce legal transitions and completeness, append typed events, and atomically update read projections.",
+          points: ["Work-unit aggregate ordering", "Artifact revision identity", "Runtime-owned lifecycle state"],
+          seam: "EventV2 durable aggregates + inline projectors",
+        },
+        execution: {
+          label: "Plane 03 / Side effects",
+          title: "Attempts, not vibes",
+          copy: "Writers, reviewers, implementers, and repair workers run as explicit attempts. The coordinator owns continuation, duplicate suppression, pause, cancellation, and fencing.",
+          points: [
+            "Runtime BackgroundJob ownership",
+            "V2 child-session semantics",
+            "Late-result suppression by attempt ID",
+          ],
+          seam: "BackgroundJob + SessionExecution + LocationServiceMap",
+        },
+        evidence: {
+          label: "Plane 04 / Verification",
+          title: "Proof has provenance",
+          copy: "Artifact validation, traceability, gates, and reviews produce typed evidence associated with an artifact revision, implementation attempt, repository state, and semantic scope.",
+          points: [
+            "Strict versioned CLI protocol",
+            "Final vs repair-scoped evidence",
+            "Structured review issues and references",
+          ],
+          seam: "Backstop Go engine behind a typed Effect service",
+        },
+        read: {
+          label: "Plane 05 / Human visibility",
+          title: "Projection, not authority",
+          copy: "The API and interface show current phase, blockers, attempts, completeness, and verification. Live events invalidate projections; they do not become a second state machine.",
+          points: ["Protocol and generated client", "Control-plane projection", "Minimal sidebar and timeline"],
+          seam: "Schema -> Protocol -> Server -> App",
+        },
+      }
+
+      const traceData = {
+        requirement:
+          "Which delivered bundle requirements have no current implemented-spec coverage, and is the gap new, lapsed, or stale?",
+        claim:
+          "Does every live requirement have an observable claim, and does every claim resolve to a real requirement at the pinned revision?",
+        task: "Which implementation claims have no responsible executable task, or are assigned to tasks whose dependencies and file sets are invalid?",
+        test: "Does each claim name a substantive test or gate, and was that verifier actually run by the runtime rather than asserted in prose?",
+        evidence:
+          "Is the passing evidence final, current, un-interrupted, and tied to the exact artifact revision and implementation attempt under review?",
+      }
+
+      const buildBrief = `Build the first Backstop Harness vertical slice on native OpenCode V2.
+
+Operating principle:
+- Fluid outside; deterministic at the boundaries.
+- Conversation discovers; artifacts commit; gates prove.
+
+Architecture decisions:
+1. Use native V2 for all new behavior.
+2. Use EventV2 as the authoritative lifecycle log and project current state atomically.
+3. Keep the Go Backstop engine canonical behind a strict versioned JSON adapter.
+4. Implement the reactive issue -> plan -> implementation path first.
+
+First slice:
+- Register a visible Backstop primary agent.
+- Add one typed capture_issue boundary tool.
+- Persist work-unit commands/events with idempotency and replay.
+- Model artifact content revisions separately from runtime lifecycle state.
+- Project requirement -> claim -> task -> test -> evidence traceability.
+- Add runtime-owned agent attempts, final verification, and structured review.
+- Ensure pause/cancel and stale-attempt results cannot advance state.
+
+Do not use synthetic user messages for automatic workflow progression, global target state, stringly lifecycle states, regex-derived evidence, GET-side effects, or agent prose as verification.`
+
+      const pathTrack = document.querySelector("#path-track")
+      const pathTitle = document.querySelector("#path-detail-title")
+      const pathCopy = document.querySelector("#path-detail-copy")
+      const pathBoundary = document.querySelector("#path-detail-boundary")
+
+      function selectPathStep(index, path) {
+        const item = pathData[path][index]
+        document
+          .querySelectorAll(".path-step")
+          .forEach((step, stepIndex) => step.classList.toggle("active", stepIndex === index))
+        pathTitle.textContent = item.name
+        pathCopy.textContent = item.copy
+        pathBoundary.textContent = item.boundary
+      }
+
+      function renderPath(path) {
+        pathTrack.replaceChildren(
+          ...pathData[path].map((item, index) => {
+            const button = document.createElement("button")
+            button.className = `path-step${index === 0 ? " active" : ""}`
+            button.innerHTML = `<span class="step-index">${String(index + 1).padStart(2, "0")}</span><span><span class="step-name">${item.name}</span><span class="step-mode">${item.mode}</span></span><span class="step-arrow">&gt;</span>`
+            button.addEventListener("click", () => selectPathStep(index, path))
+            return button
+          }),
+        )
+        selectPathStep(0, path)
+      }
+
+      document.querySelectorAll(".path-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document
+            .querySelectorAll(".path-tab")
+            .forEach((candidate) => candidate.setAttribute("aria-selected", String(candidate === tab)))
+          renderPath(tab.dataset.path)
+        })
+      })
+
+      function renderLayer(layer) {
+        const item = layerData[layer]
+        document
+          .querySelectorAll(".layer-card")
+          .forEach((card) => card.classList.toggle("active", card.dataset.layer === layer))
+        document.querySelector("#layer-label").textContent = item.label
+        document.querySelector("#layer-title").textContent = item.title
+        document.querySelector("#layer-copy").textContent = item.copy
+        document.querySelector("#layer-points").replaceChildren(
+          ...item.points.map((point) => {
+            const element = document.createElement("li")
+            element.textContent = point
+            return element
+          }),
+        )
+        document.querySelector("#layer-seam").textContent = item.seam
+      }
+
+      document
+        .querySelectorAll(".layer-card")
+        .forEach((card) => card.addEventListener("click", () => renderLayer(card.dataset.layer)))
+
+      document.querySelectorAll(".trace-node").forEach((node) => {
+        node.addEventListener("click", () => {
+          document
+            .querySelectorAll(".trace-node")
+            .forEach((candidate) => candidate.classList.toggle("active", candidate === node))
+          document.querySelector("#trace-readout").textContent = traceData[node.dataset.trace]
+        })
+      })
+
+      document.querySelector("#copy-brief").addEventListener("click", async () => {
+        const state = document.querySelector("#copy-state")
+        try {
+          await navigator.clipboard.writeText(buildBrief)
+          state.textContent = "Build brief copied."
+        } catch {
+          state.textContent = "Clipboard unavailable - open this file over localhost."
+        }
+      })
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          const scrollable = document.documentElement.scrollHeight - window.innerHeight
+          const progress = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0
+          document.querySelector(".scroll-progress").style.width = `${progress}%`
+        },
+        { passive: true },
+      )
+
+      renderPath("reactive")
+      renderLayer("conversation")
+      document.querySelector("#trace-readout").textContent = traceData.requirement
+    </script>
+  </body>
+</html>

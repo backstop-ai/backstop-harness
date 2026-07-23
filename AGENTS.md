@@ -4,6 +4,17 @@
 - The default branch in this repo is `dev`.
 - Local `main` ref may not exist; use `dev` or `origin/dev` for diffs.
 
+## Backstop Workflow
+
+- This repository consumes Backstop through root `backstop.yml` and root-level `bundles/`, `directives/`, `specs/`, `plans/`, `issues/`, and `adrs/` directories. `.backstop/` is generated operational state, not the artifact source.
+- Existing OpenCode design documents may remain under `specs/`; Backstop machine artifacts use the `*.spec.md` suffix.
+- Freeform exploration does not require an artifact. Capture a durable product commitment in a bundle and a concrete reactive defect or gap in an issue.
+- Product work follows bundle approval -> directive -> spec -> plan -> implementation -> runtime verification -> implementation review -> completion.
+- Reactive work follows issue -> issue-backed plan -> implementation -> runtime verification -> implementation review -> completion.
+- Run Backstop artifact validation and gates from the repository root. Do not treat an agent assertion as verification evidence.
+- Do not mark implementation complete without current runtime-owned final verification and a structured implementation review.
+- The current bootstrap intentionally leaves code-dependent gate dimensions off until a Bun monorepo-compatible toolchain pack is validated.
+
 ## Branch Names
 
 Use a short branch name of at most three words, separated by hyphens. Do not use slashes or type prefixes such as `feat/` or `fix/`.

@@ -1,0 +1,18 @@
+project: backstop-harness
+packs:
+    backstop/harness-toolchain: local
+enforcement:
+    baseline_ttl: 15m
+    policy:
+        artifact_status_drift:
+            level: "off"
+        contract_signature:
+            level: "off"
+        coverage_threshold:
+            level: block
+        pack_engines:
+            level: block
+        test_substantiveness:
+            level: "off"
+        test_verification:
+            level: "off"

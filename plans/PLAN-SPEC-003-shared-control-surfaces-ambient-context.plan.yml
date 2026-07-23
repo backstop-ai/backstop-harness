@@ -1,0 +1,149 @@
+---
+plan_id: PLAN-SPEC-003
+spec_id: SPEC-003
+created: "2026-07-22"
+status: completed
+spec_version: 1.0.0
+coverage_threshold: 80
+test_command: "backstop gate all"
+
+phases:
+  - id: PHASE-001
+    name: Semantic registry contracts
+    tasks:
+      - id: TASK-001
+        type: test
+        title: Add semantic registry and dispatch tests
+        description: Cover complete immutable entries, duplicates, actor filtering, shared typed dispatch, ambiguity, grant subordination, and the absence of a completion command.
+        files:
+          - packages/core/test/backstop/command-registry.test.ts
+        claims: [CLM-001, CLM-002, CLM-004, CLM-005, CLM-007, CLM-009, CLM-010]
+        test_names:
+          - "rejects duplicate or incomplete semantic command entries"
+          - "routes every control surface through one typed command handler"
+          - "omits accepted verification authority from implementer tools"
+          - "keeps exploration fluid before a durable capture command"
+          - "rejects ambiguous work-unit targets without global fallback"
+          - "keeps autonomy grants subordinate to lifecycle gates and actor policy"
+          - "keeps shared controls independent from workflow execution"
+        depends_on: []
+      - id: TASK-002
+        type: implementation
+        title: Define browser-safe command and grant contracts
+        description: Add stable semantic IDs, actors, typed results, command metadata, grant scopes, and durable grant event contracts.
+        files:
+          - packages/schema/src/backstop-control.ts
+          - packages/schema/src/backstop-event.ts
+          - packages/schema/src/durable-event-manifest.ts
+          - packages/schema/src/index.ts
+        claims: [CLM-001, CLM-004, CLM-008, CLM-009]
+        depends_on: [TASK-001]
+      - id: TASK-003
+        type: implementation
+        title: Implement semantic registry and dispatch boundary
+        description: Build immutable registry construction, actor/permission projection, typed decode and dispatch, target clarification, legal-action metadata, and grant-aware confirmation without lifecycle mutation.
+        files:
+          - packages/core/src/backstop/command/registry.ts
+        claims: [CLM-001, CLM-002, CLM-004, CLM-005, CLM-007, CLM-009, CLM-010]
+        depends_on: [TASK-001, TASK-002]
+      - id: TASK-004
+        type: verification
+        title: Verify registry contracts
+        description: Run schema/core tests, package typechecks, lint, coverage, and the scoped Backstop gate.
+        files:
+          - packages/schema/src/backstop-control.ts
+          - packages/core/src/backstop/command/registry.ts
+          - packages/core/test/backstop/command-registry.test.ts
+        claims: [CLM-001, CLM-002, CLM-004, CLM-005, CLM-007, CLM-009, CLM-010]
+        depends_on: [TASK-002, TASK-003]
+  - id: PHASE-002
+    name: Durable autonomy grants
+    tasks:
+      - id: TASK-005
+        type: test
+        title: Add autonomy grant repository tests
+        description: Use live SQLite and EventV2 to cover allow-once consumption, work-unit and project-family matching, list, revoke, restart reads, and ownership isolation.
+        files:
+          - packages/core/test/backstop/autonomy-grant.test.ts
+        claims: [CLM-008, CLM-009]
+        test_names:
+          - "persists lists consumes and revokes scoped autonomy grants"
+          - "keeps autonomy grants subordinate to lifecycle gates and actor policy"
+        depends_on: [TASK-004]
+      - id: TASK-006
+        type: implementation
+        title: Add autonomy grant schema and generated migration
+        description: Define project/work-unit-scoped grant and consumption tables, generate native core migrations, and extend migration verification.
+        files:
+          - packages/core/src/backstop/command/sql.ts
+          - packages/core/schema.json
+          - packages/core/src/database/schema.gen.ts
+          - packages/core/src/database/migration.gen.ts
+          - packages/core/src/database/migration
+          - packages/core/test/database-migration.test.ts
+        claims: [CLM-008]
+        depends_on: [TASK-005]
+      - id: TASK-007
+        type: implementation
+        title: Implement durable grant repository and evaluator
+        description: Persist, list, match, consume, and revoke grants atomically while keeping actor, lifecycle, evidence, revision, pause, and human-gate decisions outside grant authority.
+        files:
+          - packages/core/src/backstop/command/grant.ts
+        claims: [CLM-008, CLM-009]
+        depends_on: [TASK-005, TASK-006]
+      - id: TASK-008
+        type: verification
+        title: Verify grant persistence and policy
+        description: Run live repository, migration, typecheck, lint, coverage, and scoped gate verification.
+        files:
+          - packages/core/src/backstop/command/sql.ts
+          - packages/core/src/backstop/command/grant.ts
+          - packages/core/test/backstop/autonomy-grant.test.ts
+        claims: [CLM-008, CLM-009]
+        depends_on: [TASK-006, TASK-007]
+  - id: PHASE-003
+    name: Generated controls and ambient context
+    tasks:
+      - id: TASK-009
+        type: test
+        title: Add adapter and ambient-context integration tests
+        description: Compare tool, slash, direct, and UI descriptors against one handler; prove direct dispatch creates no messages; test deterministic no-focus and focused system context.
+        files:
+          - packages/opencode/test/backstop/control/adapters.test.ts
+          - packages/opencode/test/backstop/control/context.test.ts
+        claims: [CLM-002, CLM-003, CLM-004, CLM-005, CLM-006, CLM-007, CLM-010]
+        test_names:
+          - "routes every control surface through one typed command handler"
+          - "executes slash and direct actions without manufacturing conversation"
+          - "omits accepted verification authority from implementer tools"
+          - "keeps exploration fluid before a durable capture command"
+          - "renders focused Backstop state blockers actions and decisions deterministically"
+          - "rejects ambiguous work-unit targets without global fallback"
+          - "keeps shared controls independent from workflow execution"
+        depends_on: [TASK-004, TASK-008]
+      - id: TASK-010
+        type: implementation
+        title: Project registry entries into native control surfaces
+        description: Register role-scoped tools and slash/direct/UI descriptors over one dispatch service without model or session-message effects.
+        files:
+          - packages/opencode/src/backstop/control/adapters.ts
+        claims: [CLM-002, CLM-003, CLM-004, CLM-005, CLM-007, CLM-010]
+        depends_on: [TASK-003, TASK-007, TASK-009]
+      - id: TASK-011
+        type: implementation
+        title: Register focused Backstop ambient context
+        description: Add a bounded deterministic SystemContextRegistry source for focus, state, attempt, blockers, legal actions, pending decisions, and verification summary.
+        files:
+          - packages/opencode/src/backstop/control/context.ts
+        claims: [CLM-005, CLM-006, CLM-007, CLM-010]
+        depends_on: [TASK-009]
+      - id: TASK-012
+        type: verification
+        title: Run final Seed 3 verification
+        description: Run all package-local tests and typechecks followed by backstop gate all with blocking lint, build, test, and coverage policy.
+        files:
+          - packages/schema/src/backstop-control.ts
+          - packages/core/src/backstop/command
+          - packages/opencode/src/backstop/control
+        claims: [CLM-001, CLM-002, CLM-003, CLM-004, CLM-005, CLM-006, CLM-007, CLM-008, CLM-009, CLM-010]
+        depends_on: [TASK-007, TASK-010, TASK-011]

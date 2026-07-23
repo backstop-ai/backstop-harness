@@ -32,3 +32,19 @@ UPCOMING_CHANGELOG.md
 logs/
 *.bun-build
 tsconfig.tsbuildinfo
+
+# Backstop operational state (artifacts remain tracked at repository root)
+.backstop/packs/
+.backstop/baseline.json
+.backstop/pack-config-provenance.json
+.backstop/check-coverage/
+.backstop/ts-coverage/
+.backstop/ts-test-results.json
+.backstop/gitleaks.sarif
+.backstop/harness-test-junit.xml
+.backstop/harness-schema-test-junit.xml
+.backstop/harness-core-test-junit.xml
+.backstop/harness-coverage.lcov
+packages/opencode/coverage/
+packages/schema/coverage/
+packages/core/coverage/
