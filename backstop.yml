@@ -1,6 +1,6 @@
 project: backstop-harness
 packs:
-    backstop-ai/backstop-harness-toolchain-pack: 0.1.1
+    backstop-ai/backstop-harness-toolchain-pack: local
 enforcement:
     baseline_ttl: 15m
     policy:

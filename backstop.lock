@@ -1,8 +1,9 @@
 packs:
     backstop-ai/backstop-harness-toolchain-pack:
         content_hash: 11d1a562a0b4ed9a991b72ce77d41c95958a6b870f9a920745bef996493c184f
-        git_ref: v0.1.1
-        install_date: 2026-07-23T01:25:45Z
+        git_ref: null
+        install_date: 2026-07-23T02:04:04Z
+        local_path: ../backstop-harness-toolchain-pack-local
         name: backstop-ai/backstop-harness-toolchain-pack
-        source_type: git
-        version: 0.1.1
+        source_type: local
+        version: null
