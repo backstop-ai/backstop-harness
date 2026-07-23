@@ -172,29 +172,38 @@ claims:
 contracts:
   - file: packages/schema/src/backstop-control.ts
     provides:
-      - name: Semantic command and autonomy grant schemas
-        kind: type
-        signature: "CommandID | CommandActor | CommandResult | AutonomyGrant"
+      - name: Command identifier schema
+        kind: constant
+        signature: "const CommandID = unknown"
+      - name: Command actor schema
+        kind: constant
+        signature: "const CommandActor = unknown"
+      - name: Command result schema
+        kind: constant
+        signature: "const CommandResult = unknown"
+      - name: Autonomy grant schema
+        kind: constant
+        signature: "const AutonomyGrant = unknown"
   - file: packages/core/src/backstop/command/registry.ts
     provides:
       - name: Semantic command registry and dispatch boundary
         kind: interface
-        signature: "BackstopCommandRegistry.Service"
+        signature: "class Service extends unknown {}"
   - file: packages/core/src/backstop/command/grant.ts
     provides:
       - name: Durable autonomy grant repository and evaluator
         kind: interface
-        signature: "BackstopAutonomyGrant.Service"
+        signature: "class Service extends unknown {}"
   - file: packages/opencode/src/backstop/control/adapters.ts
     provides:
       - name: Tool slash direct and UI command projections
         kind: interface
-        signature: "BackstopControlAdapters.Service"
+        signature: "class Service extends unknown {}"
   - file: packages/opencode/src/backstop/control/context.ts
     provides:
       - name: Focused ambient Backstop context source
         kind: interface
-        signature: "BackstopAmbientContext.Service"
+        signature: "class Service extends unknown {}"
 ---
 
 # SPEC-003: Shared Control Surfaces And Ambient Agent Context

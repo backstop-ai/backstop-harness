@@ -1,9 +1,25 @@
 packs:
+    backstop-ai/backstop-harness-architecture-pack:
+        content_hash: 4f498f589c6f9ad3bd779581d031f5ec921bd123dc0c1066c5cd700c7c7ef6ab
+        git_ref: null
+        install_date: 2026-07-23T03:11:26Z
+        local_path: ../backstop-harness-architecture-pack-local
+        name: backstop-ai/backstop-harness-architecture-pack
+        source_type: local
+        version: null
     backstop-ai/backstop-harness-toolchain-pack:
         content_hash: 11d1a562a0b4ed9a991b72ce77d41c95958a6b870f9a920745bef996493c184f
         git_ref: null
         install_date: 2026-07-23T02:04:04Z
         local_path: ../backstop-harness-toolchain-pack-local
         name: backstop-ai/backstop-harness-toolchain-pack
+        source_type: local
+        version: null
+    backstop/contracts:
+        content_hash: a6f1a68f60a91652591261b7934de53c10450e1eea1f36082a5b3a362fe786df
+        git_ref: null
+        install_date: 2026-07-23T03:17:26Z
+        local_path: ../backstop-typescript-contracts-pack-local
+        name: backstop/contracts
         source_type: local
         version: null

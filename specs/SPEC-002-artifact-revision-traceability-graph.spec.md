@@ -199,27 +199,45 @@ claims:
 contracts:
   - file: packages/schema/src/backstop-event.ts
     provides:
-      - name: Backstop artifact revision durable event definitions
-        kind: type
-        signature: "ArtifactRevisionImported | ArtifactCandidateAccepted | ArtifactCandidateRejected | BackstopDurableEvent"
+      - name: Artifact revision imported event
+        kind: constant
+        signature: "const ArtifactRevisionImported = unknown"
+      - name: Artifact candidate accepted event
+        kind: constant
+        signature: "const ArtifactCandidateAccepted = unknown"
+      - name: Artifact candidate rejected event
+        kind: constant
+        signature: "const ArtifactCandidateRejected = unknown"
+      - name: Backstop durable event union
+        kind: constant
+        signature: "const Durable = unknown"
   - file: packages/core/src/backstop/artifact/sql.ts
     provides:
-      - name: Artifact revision and traceability projection tables
-        kind: type
-        signature: "ArtifactFileTable | ArtifactRevisionTable | TraceNodeTable | TraceEdgeTable"
+      - name: Artifact file projection table
+        kind: constant
+        signature: "const ArtifactFileTable = unknown"
+      - name: Artifact revision projection table
+        kind: constant
+        signature: "const ArtifactRevisionTable = unknown"
+      - name: Trace node projection table
+        kind: constant
+        signature: "const TraceNodeTable = unknown"
+      - name: Trace edge projection table
+        kind: constant
+        signature: "const TraceEdgeTable = unknown"
   - file: packages/core/src/backstop/artifact/repository.ts
     provides:
       - name: Artifact revision persistence and traceability queries
         kind: interface
-        signature: "ArtifactRepository.Service"
+        signature: "class Service extends unknown {}"
   - file: packages/opencode/src/backstop/artifact/importer.ts
     provides:
       - name: Location-scoped authored artifact importer
         kind: interface
-        signature: "ArtifactImporter.Service"
+        signature: "class Service extends unknown {}"
     consumes:
       - source: packages/core/src/backstop/artifact/repository.ts
-        name: ArtifactRepository.Service
+        name: Artifact revision persistence and traceability queries
         kind: interface
 ---
 

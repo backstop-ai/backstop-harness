@@ -1,13 +1,15 @@
 project: backstop-harness
 packs:
+    backstop-ai/backstop-harness-architecture-pack: local
     backstop-ai/backstop-harness-toolchain-pack: local
+    backstop/contracts: local
 enforcement:
     baseline_ttl: 15m
     policy:
         artifact_status_drift:
             level: "off"
         contract_signature:
-            level: "off"
+            level: block
         coverage_threshold:
             level: block
         pack_engines:

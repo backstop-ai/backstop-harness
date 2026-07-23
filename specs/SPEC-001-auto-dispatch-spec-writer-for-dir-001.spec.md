@@ -241,44 +241,89 @@ claims:
 contracts:
   - file: packages/opencode/src/backstop/domain/schema.ts
     provides:
-      - name: Domain identity schemas
-        kind: type
-        signature: "WorkUnitID | CommandID | LifecycleEventID | AttemptID | SessionEventID | ArtifactFileID | ArtifactRevisionID | EvidenceID | ReviewID | CausalLinkID | AttributionCorrectionID"
-      - name: Lifecycle vocabulary
+      - name: Work unit identity schema
         kind: constant
-        signature: "LIFECYCLE_STATES | COMMAND_TYPES | COMMAND_ACTORS | LIFECYCLE_EVENT_TYPES | REJECTION_REASONS | LEGAL_ACTIONS_BY_STATE"
+        signature: "const WorkUnitID = unknown"
+      - name: Command identity schema
+        kind: constant
+        signature: "const CommandID = unknown"
+      - name: Lifecycle event identity schema
+        kind: constant
+        signature: "const LifecycleEventID = unknown"
+      - name: Attempt identity schema
+        kind: constant
+        signature: "const AttemptID = unknown"
+      - name: Session event identity schema
+        kind: constant
+        signature: "const SessionEventID = unknown"
+      - name: Artifact file identity schema
+        kind: constant
+        signature: "const ArtifactFileID = unknown"
+      - name: Artifact revision identity schema
+        kind: constant
+        signature: "const ArtifactRevisionID = unknown"
+      - name: Evidence identity schema
+        kind: constant
+        signature: "const EvidenceID = unknown"
+      - name: Review identity schema
+        kind: constant
+        signature: "const ReviewID = unknown"
+      - name: Causal link identity schema
+        kind: constant
+        signature: "const CausalLinkID = unknown"
+      - name: Attribution correction identity schema
+        kind: constant
+        signature: "const AttributionCorrectionID = unknown"
+      - name: Lifecycle states
+        kind: constant
+        signature: "const LIFECYCLE_STATES = unknown"
+      - name: Command types
+        kind: constant
+        signature: "const COMMAND_TYPES = unknown"
+      - name: Command actors
+        kind: constant
+        signature: "const COMMAND_ACTORS = unknown"
+      - name: Lifecycle event types
+        kind: constant
+        signature: "const LIFECYCLE_EVENT_TYPES = unknown"
+      - name: Rejection reasons
+        kind: constant
+        signature: "const REJECTION_REASONS = unknown"
+      - name: Legal actions by state
+        kind: constant
+        signature: "const LEGAL_ACTIONS_BY_STATE = unknown"
   - file: packages/opencode/src/backstop/domain/transition.ts
     provides:
       - name: evaluateTransition
         kind: function
-        signature: "evaluateTransition(input: { aggregate: Aggregate; command: Command }): TransitionResult"
+        signature: "function evaluateTransition(input: { aggregate: Aggregate; command: Command }): TransitionResult"
       - name: TRANSITION_TABLE
         kind: constant
-        signature: "readonly TransitionRule[]"
+        signature: "const TRANSITION_TABLE: readonly TransitionRule[]"
     consumes:
       - source: packages/opencode/src/backstop/domain/schema.ts
-        name: Lifecycle vocabulary
+        name: Lifecycle event identity schema
         kind: constant
   - file: packages/opencode/src/backstop/domain/projection.ts
     provides:
       - name: projectWorkUnit
         kind: function
-        signature: "projectWorkUnit(input: { work_unit_id: WorkUnitID; events: readonly EventV2[] }): WorkUnitProjection"
+        signature: "function projectWorkUnit(input: { work_unit_id: WorkUnitID; events: readonly EventV2[] }): WorkUnitProjection"
       - name: validateAppendAndProjectBoundary
         kind: function
-        signature: "validateAppendAndProjectBoundary(input): AppendAndProjectBoundaryResult"
+        signature: "function validateAppendAndProjectBoundary(input): AppendAndProjectBoundaryResult"
     consumes:
       - source: packages/opencode/src/backstop/domain/schema.ts
-        name: LEGAL_ACTIONS_BY_STATE
+        name: Legal actions by state
         kind: constant
   - file: packages/opencode/src/backstop/domain/artifact-revision.ts
     provides:
       - name: hashArtifactRevision
         kind: function
-        signature: "hashArtifactRevision(content: string | Uint8Array): ArtifactRevisionID"
+        signature: "function hashArtifactRevision(content: ArtifactRevisionContent): ArtifactRevisionID"
       - name: requireCurrentArtifactRevision
         kind: function
-        signature: "requireCurrentArtifactRevision(input): ArtifactRevisionPrecondition"
+        signature: "function requireCurrentArtifactRevision(input)"
     consumes:
       - source: node:crypto
         name: createHash
